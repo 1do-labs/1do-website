@@ -2,17 +2,17 @@ import React from "react";
 import Image from "next/image";
 
 const LINKS = {
-  app: "https://1do.app/app",
-  appFaucet: "https://1do.app/app/faucet",
-  appRedPacket: "https://1do.app/app/redpacket",
-  appPeerDex: "https://1do.app/app/peerdex",
+  app: "https://app.1do.io",
+  appFaucet: "https://app.1do.io/faucet",
+  appRedPacket: "https://app.1do.io/redpacket",
+  appPeerDex: "https://app.1do.io/peerdex",
   peerdexStandalone: "https://peerdex.vercel.app",
-  store: "https://store.1do.app",
-  storeApps: "https://store.1do.app/en/apps",
-  storePeerDex: "https://store.1do.app/en/apps/peerdex",
+  store: "https://store.1do.io",
+  storeApps: "https://store.1do.io/en/apps",
+  storePeerDex: "https://store.1do.io/en/apps/peerdex",
   chineseGuide: "/guide/zh",
-  docs: "https://docs.1do.app",
-  labs: "https://labs.1do.app",
+  docs: "https://docs.1do.io",
+  labs: "https://labs.1do.io",
   sdk: "https://www.npmjs.com/package/@1doapp/sdk",
   sepoliaFaucet: "https://sepoliafaucet.com/",
   faucetUsdcCode: "https://sepolia.etherscan.io/address/0x9d4b951592c31dc042efDC4E1F8aE00718b96fe1#code",
@@ -416,8 +416,8 @@ export default function Home() {
               <p className="text-xs mt-1">© {new Date().getFullYear()} 1Do. All rights reserved.</p>
            </div>
            <div className="flex gap-6 text-sm font-medium text-[#1B0D15]">
-              <a href="https://github.com/1do" className="hover:text-black transition-colors">GitHub</a>
-              <a href="https://x.com/1do" className="hover:text-black transition-colors">Twitter</a>
+              <a href="https://github.com/1do-labs/" className="hover:text-black transition-colors">GitHub</a>
+              <a href="https://x.com/1do-labs" className="hover:text-black transition-colors">Twitter</a>
            </div>
         </footer>
 
