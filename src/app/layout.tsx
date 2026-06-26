@@ -2,8 +2,9 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "1Do | App Platform for Smart Wallets",
-  description: "1Do is an app platform for smart wallets, built on a smart account runtime.",
+  title: "1Do",
+  description:
+    "1Do is a smart account runtime for activating once and doing payments, trades, and apps from one wallet.",
 };
 
 export const viewport: Viewport = {

@@ -1,0 +1,33 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="ps-spectrum-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e1b4b" />
+      <stop offset="100%" stop-color="#4c1d95" />
+    </linearGradient>
+  </defs>
+  <g>
+    <rect x="0" y="0" width="100" height="100" rx="20" fill="url(#ps-spectrum-grad)" />
+    <path
+      d="M0 0 H100 A20 20 0 0 1 100 20 V50 C100 50 80 20 50 20 C20 20 0 50 0 50 V20 A20 20 0 0 1 0 0 Z"
+      fill="#ffffff"
+      opacity="0.15"
+    />
+    <rect
+      x="0.6"
+      y="0.6"
+      width="98.8"
+      height="98.8"
+      rx="19.4"
+      fill="none"
+      stroke="#ffffff"
+      stroke-opacity="0.22"
+      stroke-width="0.8"
+    />
+    <rect x="45" y="35" width="10" height="10" fill="#db2777" />
+    <rect x="35" y="45" width="10" height="10" fill="#9333ea" />
+    <rect x="45" y="45" width="10" height="10" fill="#2563eb" />
+    <rect x="45" y="55" width="10" height="10" fill="#0ea5e9" />
+    <rect x="55" y="45" width="10" height="10" fill="#22c55e" />
+    <rect x="55" y="55" width="10" height="10" fill="#ffffff" />
+  </g>
+</svg>

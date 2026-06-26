@@ -2,16 +2,16 @@ import React from "react";
 
 const LINKS = {
   home: "/",
-  app: "https://1do.app/app",
-  peerdexStandalone: "https://peerdex.vercel.app",
-  store: "https://store.1do.app/en/apps",
-  storePeerDex: "https://store.1do.app/en/apps/peerdex",
-  appFaucet: "https://1do.app/app/faucet",
-  appRedPacket: "https://1do.app/app/redpacket",
-  appPeerDex: "https://1do.app/app/peerdex",
+  app: "https://app.1do.io",
+  store: "https://store.1do.io/en/apps",
+  storeDex: "https://store.1do.io/en/apps/dex",
+  appFaucet: "https://app.1do.io/faucet",
+  appRedPacket: "https://app.1do.io/redpacket",
+  appDex: "https://app.1do.io/dex",
+  appNftMarket: "https://app.1do.io/nftmarket",
   sepoliaFaucet: "https://sepoliafaucet.com/",
-  faucetUsdcCode: "https://sepolia.etherscan.io/address/0x9d4b951592c31dc042efDC4E1F8aE00718b96fe1#code",
-  faucetUsdtCode: "https://sepolia.etherscan.io/address/0xdd7468f993c52fcF43Cef80c9a4e042de4920F2d#code",
+  faucetUsdcCode: "https://sepolia.etherscan.io/address/0x78e8421FB1cB038bc63BC7450504eBe75d7d4725#code",
+  faucetUsdtCode: "https://sepolia.etherscan.io/address/0x15F758653dBD7E64e20ad0AddBb4d43d773d369E#code",
 };
 
 const STEPS = [
@@ -34,23 +34,23 @@ const STEPS = [
   },
   {
     id: "03",
-    icon: "token",
-    title: "在 Store mint PeerDex App NFT",
-    desc: "在 Store 中 mint PeerDex App NFT，完成后 PeerDex 才会在你的 1Do 钱包中出现并可用。",
+    icon: "apps",
+    title: "在 Store 启用 Dex",
+    desc: "在 Store 中为当前地址启用 Dex。完成后，Dex 才会在你的 1Do 钱包 runtime 中出现并可用。",
     links: [
       { label: "打开 Store", href: LINKS.store },
-      { label: "Mint PeerDex", href: LINKS.storePeerDex },
+      { label: "启用 Dex", href: LINKS.storeDex },
     ],
   },
   {
     id: "04",
     icon: "rocket_launch",
-    title: "System / App NFT / 独立平台",
-    desc: "Red Packet（System）默认可用；钱包内 PeerDex（App NFT）需先 mint；PeerDex 独立平台是分离产品。",
+    title: "钱包内置 / Store 启用应用",
+    desc: "Red Packet 是钱包内置功能；Dex、NFT Market、Flash Loan、Will、Session Pay 是 Store 启用后通过 runtime 运行的 app。",
     links: [
-      { label: "Red Packet（System APP）", href: LINKS.appRedPacket },
-      { label: "钱包内 PeerDex（App NFT）", href: LINKS.appPeerDex },
-      { label: "PeerDex 独立平台", href: LINKS.peerdexStandalone },
+      { label: "Red Packet（钱包内置）", href: LINKS.appRedPacket },
+      { label: "Dex（已启用应用）", href: LINKS.appDex },
+      { label: "NFT Market", href: LINKS.appNftMarket },
     ],
   },
 ] as const;
@@ -61,11 +61,11 @@ const FAQ = [
     a: "确认当前网络是 Sepolia（11155111），并重新连接钱包后再试。激活入口只会在尚未启用 1Do runtime 的地址上出现。",
   },
   {
-    q: "Faucet 或 Mint 失败",
+    q: "Faucet 或 Store 启用失败",
     a: "通常是网络不对或 gas 不足。请先确认 Sepolia 网络，并确保钱包里有少量测试 ETH。",
   },
   {
-    q: "Mint 之后 PeerDex 还没显示",
+    q: "启用之后 Dex 还没显示",
     a: "等待链上确认和前端轮询同步（通常 10-30 秒），然后刷新 1Do 页面。",
   },
 ] as const;
@@ -104,7 +104,7 @@ export default function ChineseGuidePage() {
               1Do 官网中文指导
             </h1>
             <p className="mt-2 text-sm text-[#1B0D15]/65">
-              官网路径：`/guide/zh`。从连接钱包、启用 1Do runtime，到 Store mint PeerDex，再到打开运行在账户内的应用，按步骤完成即可。
+              官网路径：`/guide/zh`。从连接钱包、激活 1Do runtime，到 Store 启用 Dex，再到打开运行在账户内的应用，按步骤完成即可。
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
               <a
@@ -167,23 +167,18 @@ export default function ChineseGuidePage() {
 
             <div className="lg:col-span-4 space-y-6">
               <div className="bg-[linear-gradient(145deg,#120a0f,#22131c)] text-white rounded-[2rem] p-5 sm:p-6 border border-white/10 shadow-[0_30px_60px_-35px_rgba(0,0,0,0.6)]">
-                <h3 className="text-base font-semibold">应用类型：System / App NFT / 独立交易平台</h3>
-                <p className="mt-1 text-xs text-white/70">运行在以太坊 Sepolia 测试网。System / App NFT 在 1Do 钱包内运行，独立平台为外部产品。</p>
+                <h3 className="text-base font-semibold">应用类型：钱包内置 / Store 启用</h3>
+                <p className="mt-1 text-xs text-white/70">运行在以太坊 Sepolia 测试网。钱包内置能力默认可用，Store 启用应用通过 1Do runtime 运行。</p>
                 <div className="mt-4 space-y-3">
                   <div className="rounded-2xl bg-white/10 border border-white/10 p-3">
-                    <p className="text-xs uppercase tracking-widest text-white/60">System App</p>
+                    <p className="text-xs uppercase tracking-widest text-white/60">钱包内置</p>
                     <p className="mt-1 text-sm font-medium">Red Packet</p>
-                    <p className="mt-1 text-xs text-white/70">默认可用，属于 1Do 钱包内置路径，无需先 mint。</p>
+                    <p className="mt-1 text-xs text-white/70">默认可用，属于 1Do 钱包内置路径，无需先在 Store 启用。</p>
                   </div>
                   <div className="rounded-2xl bg-white/10 border border-white/10 p-3">
-                    <p className="text-xs uppercase tracking-widest text-white/60">App NFT</p>
-                    <p className="mt-1 text-sm font-medium">PeerDex</p>
-                    <p className="mt-1 text-xs text-white/70">需先在 Store mint，随后在你的 1Do 钱包中可用。</p>
-                  </div>
-                  <div className="rounded-2xl bg-white/10 border border-white/10 p-3">
-                    <p className="text-xs uppercase tracking-widest text-white/60">Standalone Platform</p>
-                    <p className="mt-1 text-sm font-medium">PeerDex 独立交易平台</p>
-                    <p className="mt-1 text-xs text-white/70">独立于 1Do 钱包内应用路径。</p>
+                    <p className="text-xs uppercase tracking-widest text-white/60">Store 启用</p>
+                    <p className="mt-1 text-sm font-medium">Dex / NFT Market / Flash Loan / Will / Session Pay</p>
+                    <p className="mt-1 text-xs text-white/70">需先在 Store 启用，随后在你的 1Do 钱包中可用。</p>
                   </div>
                 </div>
               </div>
