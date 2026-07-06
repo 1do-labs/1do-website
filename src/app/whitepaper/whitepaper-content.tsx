@@ -1,10 +1,12 @@
 import Link from "next/link";
 
 type WhitepaperBlock =
+  | { type: "subheading"; text: string }
   | { type: "paragraph"; text: string }
   | { type: "list"; items: string[] }
   | { type: "ordered"; items: string[] }
-  | { type: "code"; text: string };
+  | { type: "code"; text: string }
+  | { type: "diagram"; variant: "traditional" | "onedo"; language: "zh" | "en" };
 
 type WhitepaperSection = {
   id: string;
@@ -18,6 +20,7 @@ type WhitepaperCopy = {
   currentLanguage: string;
   otherLanguage: string;
   otherLanguageHref: string;
+  label: string;
   title: string;
   intro: string;
   tags: string[];
@@ -136,116 +139,120 @@ Payments vs USDC-native auth EIP-3009 / transferWithAuthorization ERC-8112 first
 
 const zhSections: WhitepaperSection[] = [
   {
-    id: "vision",
-    title: "一次激活，账户即平台",
+    id: "abstract",
+    title: "摘要",
     blocks: [
-      { type: "paragraph", text: "1Do 的愿景是把钱包从“签名工具”推进到“用户自己的链上执行环境”。用户不应该为了交易、支付、订阅、遗嘱、NFT 市场或未来的新应用反复迁移资产、创建新账户、理解每个 app 的权限系统。" },
-      { type: "paragraph", text: "在 1Do 中，一个地址就是用户的账户、资产边界和应用运行边界。用户激活一次 runtime，之后不断给同一个地址增加能力：发现 app、启用 app、执行 app、签署意图、完成结算。" },
-      { type: "paragraph", text: "更具体地说，1Do 想实现的是“账户即平台”：用户的地址既是钱包，也是 app runtime，也是支付与 DeFi 的结算边界。app 不再要求用户把资产转移到平台账户、vault 或托管合约里才能使用，而是围绕用户自己的账户运行。" },
-      { type: "list", items: ["账户应该跟随用户，而不是跟随某个 app。", "资产权限应该收敛在钱包，而不是散落在 token、router、市场和支付合约里。", "app 应该独立创新，但不能重新定义用户钱包的核心信任边界。", "用户体验应该从“理解合约调用”走向“理解我要完成的动作”。"] },
+      { type: "paragraph", text: "1Do 是新一代链上账户与应用运行平台。它的目标不是再造一个托管式应用入口，而是把账户、资产授权、签名验证和应用执行边界收敛到用户自己的地址。" },
+      { type: "paragraph", text: "在 1Do 中，用户激活一次 ERC-7702 运行时后，同一个地址既是钱包，也是应用运行环境，也是 DeFi、支付、NFT、遗产和会话化应用的结算边界。应用可以独立创新，但不能把用户从自己的账户边界里搬走。" },
+      { type: "list", items: ["账户跟随用户，而不是跟随某个应用。", "资产权限收敛在钱包运行时，而不是散落在代币、路由器、市场和支付合约里。", "应用通过 Core 进入，通过运行时执行，通过钱包原生授权结算。", "用户体验从理解底层合约调用，转向理解自己正在完成的动作。"] },
     ],
   },
   {
-    id: "core-design",
-    title: "核心设计观点：Less is More",
+    id: "concepts",
+    title: "现有概念介绍",
     blocks: [
-      { type: "paragraph", text: "1Do 的核心设计观点是 less is more：资产合约更小，app 边界更清楚，wallet runtime 承担真正属于账户的权限能力。减少一层中间账户、减少一类长期授权、减少一套 app 自建权限系统，通常比增加抽象更重要。" },
-      { type: "list", items: ["资产层少做事：token / NFT 负责余额和归属，不把所有用户级权限塞进资产合约。", "账户层多负责：签名验证、授权边界、session、pull context、app enablement 都收敛到用户自己的 wallet runtime。", "app 层保持独立：Dex、NFT Market、Will、Session Pay 保留业务规则，但不复制 wallet-core。", "交互层减少步骤：优先一次签名、一次执行、一次结算，而不是 approve -> deposit -> execute -> withdraw。", "安全层减少残留：执行结束后不留下可复用 allowance、operator approval 或平台托管余额。"] },
+      { type: "paragraph", text: "以太坊早期默认用户使用 EOA。EOA 没有代码、没有本地状态，也不能表达细粒度执行策略，所以 DeFi 把大量权限逻辑下沉到代币、路由器、市场、金库或应用合约里。" },
+      { type: "paragraph", text: "ERC-20 approve(spender, amount) / allowance(owner, spender) 是当前 DeFi 最典型的交互模型。用户先批准路由器或应用使用某个代币，再由应用在交易、支付、订阅或结算时通过 transferFrom 拉取资产。NFT 也有类似问题：approve、setApprovalForAll 和操作员授权把用户级权限长期放在资产合约或市场合约里。" },
+      { type: "subheading", text: "Uniswap" },
+      { type: "paragraph", text: "Uniswap 是以太坊上最重要的去中心化交易协议之一，核心功能是让用户在 ERC-20 资产之间做自动化做市和兑换。它诞生并成长于 EOA 账户和 ERC-20 标准资产的基础之上：用户的钱包地址持有代币，交易合约或路由器通过 ERC-20 allowance 获得支出权，再把资产送入池子、完成兑换和结算。" },
+      { type: "paragraph", text: "这种模式的优点是开放、可组合、无需平台托管余额，任何 ERC-20 都可以接入同一套交易路径。麻烦在于，用户首次用某个 ERC-20 交易时通常不能直接 swap，而是要先发一笔 approve，再发一笔 swap；在这个首次交互流程里，approve 通常占 2 笔用户交易中的 1 笔，也就是 50% 的交易次数和确认次数。EOA 本身不能表达“只允许这一次 swap、只允许这个报价、执行完自动清理授权”的账户策略，所以授权必须落在 token.allowance 或 Permit2 这类 spender 模型里。Permit2 和 Universal Router 改善了授权复用、签名和路由体验，但用户仍要理解自己把哪种资产、多少额度、多久期限交给了哪个外部合约。" },
+      { type: "subheading", text: "OpenSea" },
+      { type: "paragraph", text: "OpenSea 是主流 NFT 市场，Seaport 是其开放订单协议。NFT 市场同样建立在 EOA 和 ERC-721 / ERC-1155 的基础上：NFT 留在用户地址中，用户签署订单，市场或执行合约在成交时根据订单规则转移 NFT 和支付资产。" },
+      { type: "paragraph", text: "为了让市场在未来某个时间完成成交，用户通常不能只签一笔 listing 或成交订单，还要先对 NFT 集合执行 approve 或 setApprovalForAll。它降低了后续 listing 和成交的交互成本，也让链下订单簿成为可能；但首次挂牌或首次使用市场时，授权动作本身就是额外交易、额外 gas 和额外钱包确认。operator 授权的边界是“某个合约能否转移整套集合”，而不是“某一笔订单是否成交”。如果用户误授权恶意 operator、签署伪装订单，或授权长期遗留在资产合约里，风险会覆盖整个 collection，而不只是某一次挂牌。" },
+      { type: "subheading", text: "USDT 与 USDC" },
+      { type: "paragraph", text: "USDT 与 USDC 是链上支付场景中最常用的美元稳定币。和通用 DeFi 交易不同，支付的核心不是撮合最优路径，而是让付款方、收款方、金额、币种、网络和有效期足够清晰，并让支付可以被网站、API、agent 或中继者可靠结算。USDT 的优势是流动性、交易对和多链覆盖极强，适合广泛的转账和结算场景；USDC 的优势是开发者工具、合规接口和可编程支付支持更完整，尤其适合 checkout、gasless payment、API 计费和企业结算。" },
+      { type: "paragraph", text: "在授权模型上，很多 USDT / USDC 支付仍走 ERC-20 transfer 或 approve + transferFrom；USDC 还支持 EIP-3009 transferWithAuthorization / receiveWithAuthorization，让付款方用 EIP-712 签名授权一次具体转账，合约通过 nonce 和有效期防止重放，不需要先写入 USDC.allowance。x402 则把支付请求放到 HTTP 402 语义中，让 API、内容、AI agent 和自动化客户端可以按请求用 USDC 等稳定币付款。这些路径提升了支付可编程性，但风险不会消失：USDT / USDC 仍有链选择错误、收款地址错误、中心化发行方和冻结策略、合约兼容性、长期 allowance、签名钓鱼、facilitator 校验、前端和 agent 策略等风险。如果用户或 agent 无法看懂自己正在为哪个资源付款、付款多少、在哪条链上付款、可被谁结算，支付签名仍可能被钓鱼或滥用。" },
+      { type: "subheading", text: "现有 APP 和 ERC-20 模式的风险与成本" },
+      { type: "paragraph", text: "上述模式的共同基础是 EOA、ERC-20 / ERC-721 授权、外部 spender / operator、以及大量由前端和签名界面解释的用户意图。它们支撑了开放金融的早期繁荣，但也把资产权限分散在 token allowance、NFT operator、router、market、支付合约和托管平台中。成本首先体现在交互和 gas：Ledger 对 token approval 的解释也指出，approval 会作为单独交易上链并产生 gas 费用；在典型首次 ERC-20 APP 交互里，approve + execute 是 2 笔交易，approve 占首次流程交易次数的 50%。按白皮书中的常见预算，ERC-20 approve 通常约 50k-75k gas，NFT approve / setApprovalForAll 通常约 50k-100k gas；这些 gas 并不完成用户真正想要的 swap、listing 或支付，只是为后续应用执行打开权限。" },
+      { type: "paragraph", text: "风险不能严谨地简化成一个固定的“被盗资金中有多少概率来自恶意授权”，因为不同报告把 stolen funds、scams、phishing、wallet drainer 和 approval phishing 分在不同口径里；更稳妥的结论是：approve 这类长期授权本身已经成为可规模化利用的攻击面。" },
+      { type: "paragraph", text: "公开数据已经足够说明规模。Chainalysis 在 2023 年 12 月估算，样本地址自 2021 年 5 月以来通过 approval phishing 造成约 10 亿美元损失，其中 2022 年约 5.168 亿美元、2023 年截至 11 月约 3.746 亿美元；Chainalysis 2026 年 6 月又披露 Operation Spincaster 在多个国家处理超过 7,000 条线索，关联约 1.62 亿美元损失。Scam Sniffer 的年度报告显示，EVM 钱包 drainer 钓鱼在 2024 年造成约 4.94 亿美元损失，2025 年回落至约 8,400 万美元。这些损失并不只来自某一个项目，而是来自现有账户和资产授权范式中可复用、可伪装、可长期残留的权限。" },
+      { type: "paragraph", text: "另一类常见体验是先存入平台再使用：交易平台、借贷池、金库、订单簿或托管合约先接收用户资产，然后在平台内部记账、撮合、结算或清算。这简化了应用逻辑，但用户的资产边界从自己的钱包转移到了平台合约。这同样不是抽象风险：Chainalysis 统计 2024 年 crypto platforms 被盗约 22 亿美元，DeFi 在一季度仍是最大被盗资产来源，中心化服务在二、三季度成为主要目标；2025 年上半年，cryptocurrency services 被盗已超过 21.7 亿美元，其中 Bybit 单一事件约 15 亿美元。TRM Labs 也估算 2024 年 hacks and exploits 造成约 22 亿美元损失，三年合计超过 77 亿美元。平台存入模型把多个用户的资产集中到同一服务、合约或密钥体系中，一旦业务逻辑、访问控制、私钥管理或跨链组件失守，损失会被集中放大。" },
+      { type: "list", items: ["优点：模型简单，组合性强，当前 DeFi 和 NFT 市场大量依赖它启动。", "代价：授权是持久状态，交易结束后授权额度或操作员授权仍可能存在。", "代价：授权对象是支出方或操作员，不是一次具体业务动作。", "代价：approve + execute 通常是两笔交易和两次钱包确认。", "代价：平台存入模型让资产可用性和退出路径依赖平台逻辑。"] },
     ],
   },
   {
-    id: "eoa-and-defi",
-    title: "EOA 账户与当前 DeFi",
+    id: "state-model",
+    title: "状态模型差异",
     blocks: [
-      { type: "paragraph", text: "以太坊早期默认用户使用 EOA。EOA 没有代码、没有本地状态，也不能表达细粒度执行策略，所以 DeFi 只能把大量权限逻辑下沉到 token、router、market、vault 或 app 合约里。" },
-      { type: "paragraph", text: "ERC-20 的 approve(spender, amount) / allowance(owner, spender) 是当前 DeFi 最典型的交互模型。用户先批准 router 或 app 使用某个 token，再由 app 在 swap、支付、订阅或结算时 transferFrom 拉取资产。" },
-      { type: "paragraph", text: "另一类常见 DeFi 体验是“先把资产转到平台里再使用”：用户把资产 deposit 到交易平台、借贷池、vault、订单簿或托管合约，之后平台内部再记账、撮合、结算或清算。这让平台更容易做业务逻辑，但用户的资产边界从自己的钱包转移到了平台合约。" },
-      { type: "list", items: ["优点：模型简单、组合性强，Uniswap、聚合器、USDC 支付和很多托管式收款流程都依赖它启动。", "代价：授权是持久状态，交易结束后 allowance 仍可能存在。", "代价：授权对象是 spender 合约，不是一次具体业务执行。", "代价：approve 和业务调用通常是两笔交易，用户要付两次 gas、看两次钱包弹窗。", "代价：deposit 模型要求用户先把资产移入平台合约，资产可用性和退出路径依赖平台逻辑。", "代价：钱包很难解释“这个授权未来能做什么”。"] },
-      { type: "paragraph", text: "NFT 也有同样问题：approve、setApprovalForAll、operator approval 和 safeTransferFrom 把用户级权限塞进 NFT 合约或市场合约。EOA 时代这样做是合理的工程妥协，但在 ERC-7702 和合约钱包成熟后，权限有机会回到用户自己的账户 runtime。" },
+      { type: "paragraph", text: "传统 DeFi 中，用户地址主要是签名主体，状态和权限通常留在外部协议里：token allowance、NFT operator、池子、金库、订单和平台余额。" },
+      { type: "diagram", variant: "traditional", language: "zh" },
+      { type: "paragraph", text: "1Do 把运行时放回用户地址。`executeRuntimeApp(app, data)` 通过 delegatecall 让应用逻辑进入用户账户执行帧；`enabledApps`、nonce 和应用状态使用命名空间存储，临时资产拉取则只存在于一次执行窗口。" },
+      { type: "diagram", variant: "onedo", language: "zh" },
+      { type: "list", items: ["传统 DeFi：协议是状态中心，用户账户多是签名入口。", "1Do：用户地址是状态和运行时中心，应用更像可插拔逻辑。"] },
     ],
   },
   {
-    id: "asset-direction",
-    title: "资产标准方向",
+    id: "onedo",
+    title: "1Do",
     blocks: [
-      { type: "paragraph", text: "1Do 当前兼容 ERC-20 / ERC-721，因为它们仍是主流资产接口。但长期看，合约钱包环境不需要把所有用户权限都塞进资产合约。资产合约应该更像“余额和归属账本”，账户 runtime 才应该表达用户授权、组合、session、pull 和清晰签名。" },
-      { type: "paragraph", text: "ERC-7196 / ERC-7561 表达的是更小的 token / NFT 方向：ERC-7196 移除 ERC-20 里的 transferFrom、approve、allowance；ERC-7561 移除 ERC-721 里的 approve、setApprovalForAll、getApproved、isApprovedForAll、safeTransferFrom，把这些用户级权限从资产合约上移到合约钱包。" },
+      { type: "subheading", text: "账户本身就是应用的运行时" },
+      { type: "paragraph", text: "1Do 的核心判断是：钱包地址本身才是真正的应用执行边界。主线账户模型基于 ERC-7702，用户连接的地址就是运行时工作地址；用户不需要把资产迁移到第二个智能钱包地址，也不需要通过铸造 NFT 或启用资产管理中间层来使用运行时应用。" },
+      { type: "paragraph", text: "1Do Core 是当前统一产品入口，用来连接钱包、进入运行时应用，并打开 Dex、NFT Market、Flash Loan、Will、Session Pay 等账户能力。Core 是用户体验入口，运行时是账户执行边界；测试资产水龙头属于测试网辅助工具，不属于钱包运行时能力本身。" },
+      { type: "code", text: runtimeHostInterface },
+      { type: "paragraph", text: "运行时通过 ERC-8280 风格的 executeRuntimeApp(app, data) 进入应用执行，并通过本地 enableApp / disableApp 管理某个地址允许哪些应用在自己的钱包运行时中执行。全局平台门控与用户本地启用是两个不同问题；当前 Core 运行时的可执行性可以概括为：" },
+      { type: "code", text: "wallet.isAppEnabled(app) && registry.isEntitled(address(0), app)" },
+      { type: "list", items: ["ERC-7702：让 EOA 地址获得合约执行能力，用户不需要把资产迁移到新的智能钱包地址。", "ERC-8280：定义最小运行时应用宿主接口，executeRuntimeApp 是无需许可的触发入口。", "ERC-1271：让运行时钱包验证 EIP-712 意图、订单、支付授权和遗产计划。", "ERC-7201：用命名空间存储隔离宿主状态与应用状态，降低存储冲突风险。", "ERC-165：让前端、中继者和应用可以发现运行时、资产拉取、签名转账等能力。"] },
+    ],
+  },
+  {
+    id: "asset-layer",
+    title: "资产层与钱包原生授权",
+    blocks: [
+      { type: "paragraph", text: "1Do 当前兼容 ERC-20 / ERC-721，因为它们仍是主流资产接口。但在合约钱包环境中，资产合约不需要承载所有用户权限。资产合约应该更像余额和归属账本，账户运行时表达用户授权、组合、会话、资产拉取和清晰签名。" },
+      { type: "paragraph", text: "ERC-7196 / ERC-7561 代表更小的 token / NFT 方向：ERC-7196 移除 ERC-20 里的 transferFrom、approve、allowance；ERC-7561 移除 ERC-721 里的 approve、setApprovalForAll、getApproved、isApprovedForAll、safeTransferFrom，把用户级权限从资产合约上移到合约钱包。" },
       { type: "code", text: erc7196Interface },
       { type: "code", text: erc7561Interface },
-      { type: "list", items: ["ERC-7196 的缘由：ERC-20 allowance 是 EOA 时代的妥协，长期授权、无限授权和 spender 风险都来自资产合约承担了用户权限状态。", "ERC-7196 的好处：token 合约只保留 totalSupply、balanceOf、transfer 和 Transfer event，资产层更接近单纯账本，逻辑更小，审计面更窄，也更容易被钱包 runtime、pull 标准和支付标准复用。", "ERC-7561 的缘由：ERC-721 approval / operator approval 把 NFT 用户权限长期放在资产合约里，市场、聚合器或 operator 出问题时会把单个业务风险放大成账户级资产风险。", "ERC-7561 的好处：NFT 合约只保留 ownerOf、balanceOf、transferFrom 和 Transfer event，授权从“某个 operator 长期可动我的 NFT”变成“我的钱包 runtime 在一次具体执行中验证并放行”。", "ERC-7196 / ERC-7561 不是要求今天废弃 ERC-20 / ERC-721，而是给合约钱包时代提供更清晰的分层：资产合约记录资产事实，账户 runtime 表达用户意图、权限、限额、会话和撤销。"] },
-    ],
-  },
-  {
-    id: "onedo-account",
-    title: "1Do 账户模型",
-    blocks: [
-      { type: "paragraph", text: "1Do 的核心判断是：钱包地址本身才是真正的应用执行边界。当前主线没有第二个 predicted smart wallet，也没有 app NFT 启用模型；用户不需要先迁移资产、创建新钱包地址、mint app NFT，或启用单独的资产管理 app 才能使用 1Do runtime apps。" },
-      { type: "paragraph", text: "主线账户模型基于 ERC-7702：用户连接的地址就是 runtime 工作地址。runtime 通过 ERC-8280 风格的 executeRuntimeApp(app, data) 进入 app 执行，并通过本地 enableApp / disableApp 管理这个地址启用了哪些 app。" },
-      { type: "code", text: runtimeHostInterface },
-      { type: "paragraph", text: "全局平台 gating 与用户本地启用是两个不同问题。平台 registry 决定某个 app logic 是否允许运行；用户钱包本地状态决定这个地址是否启用了该 app。当前 core runtime 的可执行性可以概括为：" },
-      { type: "code", text: "wallet.isAppEnabled(app) && registry.isEntitled(address(0), app)" },
-      { type: "paragraph", text: "这些 ERC 的缘由是一致的：EOA 缺少代码和状态，传统 app 只能把权限放进外部合约；1Do 通过 7702 runtime 把代码、状态、签名验证和 app enablement 放回用户地址。" },
-      { type: "list", items: ["ERC-7702：缘由是让 EOA 地址获得合约执行能力；好处是用户不需要把资产迁移到新 smart wallet 地址，连接地址就是工作地址。", "ERC-8280：缘由是 smart account 需要一个最小 runtime app host 标准；机制是 enableApp / disableApp / isAppEnabled 管理本地启用状态，executeRuntimeApp 作为 permissionless trigger 入口。", "ERC-8280 的好处：任何 relayer、counterparty、keeper 或 executor 都可以触发已启用 app，但触发者不会获得 wallet-owner authority；app 在 host context 中运行，返回值和 revert data 透传，nested runtime execution 被拒绝。", "ERC-1271：缘由是合约账户不能用 EOA ecrecover 假设；好处是 runtime 钱包可以验证 EIP-712 intent、订单、支付授权和遗产计划。", "ERC-7201：缘由是 runtime host 与多个 app 共享执行环境时容易产生 storage collision；好处是 host state 和每个 app state 使用独立 namespaced storage，避免 app 覆盖账户核心状态。", "ERC-165：用于 runtime、pull、transfer-with-sig、permit 等能力发现，让前端、relayer 和 app 可以用 supportsInterface 检测钱包支持哪些标准。"] },
-    ],
-  },
-  {
-    id: "runtime-app-standards",
-    title: "Runtime App 标准与限定",
-    blocks: [
-      { type: "paragraph", text: "1Do 允许 app 保留自己的业务逻辑，但 runtime app 必须遵守账户边界。app 可以定义订单、价格、结算、过期、事件和错误；不能重新实现一套 wallet-core 权限系统。" },
-      { type: "list", items: ["必须通过 runtime 入口执行：主路径是 executeRuntimeApp(app, data)。", "必须尊重本地启用：平台全局上架不等于某个钱包自动启用。", "必须尊重 registry：被平台 block 的 app 不应继续执行。", "不能依赖长期 token allowance 或 NFT operator approval 作为主结算路径。", "不能制造新的 external self-call frame 来绕过 runtime caller discipline。", "app 状态可以放在 app 合约里，但用户权限、签名验证、pull 上下文和执行锁属于 wallet runtime。"] },
-      { type: "paragraph", text: "这些限定的好处是把 app 创新和账户安全分层：Dex、NFT Market、Flash Loan、Will、Session Pay 可以各自演化，但它们都不能把用户从自己的钱包边界里“搬走”。" },
-    ],
-  },
-  {
-    id: "onedo-defi",
-    title: "1Do DeFi：意图、结算与有界授权",
-    blocks: [
-      { type: "paragraph", text: "1Do DeFi 不试图把所有交易都变成一个统一 AMM。Dex 是 intent 型 runtime app：maker 链下签 EIP-712 订单，relay 链下分发，buyer 通过自己的 7702 runtime 在链上成交。" },
-      { type: "paragraph", text: "1Do 的关键变化不是“没有授权”，而是把授权从长期 allowance 改成执行局部、有边界、可读的 wallet-native 授权。ERC-8284 / ERC-8285 对应 token / NFT pull：app 在一次执行中收取资产，但不会留下可复用 allowance 或 operator approval。" },
+      { type: "paragraph", text: "在当前兼容路径里，1Do 用 ERC-8284 / ERC-8285 替代长期代币授权额度和 NFT 操作员授权，把资产拉取约束在一次执行窗口中。" },
       { type: "code", text: tokenPullInterface },
       { type: "code", text: nftPullInterface },
-      { type: "list", items: ["ERC-8284：缘由是替代长期 token allowance；机制是 executeWithTokenPull(target, data, asset, maxAmount) 创建临时 pull context，绑定 target、asset、remainingAmount。", "ERC-8284 的好处：target 可以在执行中决定实际收取多少，但 tokenPullToCaller 只能由绑定 target 调用，累计 pull 不能超过 cap，执行成功或回滚前必须清除上下文。", "ERC-8285：缘由是替代长期 NFT operator approval；机制是 executeWithNftPull(target, data, asset, tokenId) 只授权一个 target 在一次执行中拉取一个具体 NFT。", "ERC-8285 的好处：nftPullToCaller 必须匹配 target、asset、tokenId，执行窗口结束后任何 pull 都必须失败，避免留下可复用 operator 权限。", "Dex：优先走 executeWithTokenPull(...)，当前主线 signed order 是 full-fill-only。", "NFT Market：订单语义属于 market app，结算走 wallet-native pull。", "Flash Loan：按 ERC-3156 暴露 flash lender / borrower 语义，让钱包余额成为可启用的流动性能力。", "EIP-712 用于订单、intent 和授权签名；ERC-7730 用于把签名或交易展示成更清晰的人类可读意图。"] },
+      { type: "list", items: ["代币拉取绑定目标合约、资产和剩余额度，累计不能超过上限。", "NFT 拉取绑定目标合约、资产和 tokenId，只授权一个目标合约在一次执行中拉取一个具体 NFT。", "执行成功或回滚前必须清除上下文，执行窗口结束后任何拉取都必须失败。", "结果是不留下可复用授权额度或操作员授权。"] },
+    ],
+  },
+  {
+    id: "applications",
+    title: "应用程序",
+    blocks: [
+      { type: "paragraph", text: "1Do Core 中的运行时应用不是把用户资产搬到新的平台账户里，而是在用户自己的钱包运行时中完成业务执行。每个应用保留自己的业务模型，但结算、签名验证、资产授权和执行边界回到同一个账户运行时。" },
+      { type: "list", items: ["Dex：挂单方链下签署 EIP-712 订单，吃单方在自己的 7702 运行时中一次成交；相比 approve -> swap，Dex 不要求长期代币授权额度，也不要求用户把资产预存到交易平台。", "NFT Market：订单和市场规则由市场应用表达，NFT 或支付资产结算走钱包原生拉取；相比 setApprovalForAll，用户不需要把整个 NFT 集合长期授权给市场或聚合器。", "Flash Loan：把钱包中已启用的余额变成可组合流动性；流动性仍处在用户账户边界内，执行由运行时约束。", "Will：遗产计划保存在用户自己的账户语义内，资产在触发前仍留在钱包地址；执行人只能按计划和运行时规则处理尚未分发的资产。", "Session Pay：适合 API、AI agent、订阅和高频微支付；用户先签会话授权，后续结算授权按限额、周期和累计金额执行，不需要每次请求都重新签完整付款。"] },
+      { type: "paragraph", text: "这些应用的共同优势不是某个单点 gas 数字，而是减少迁移、减少长期授权、减少平台余额、减少重复签名，并让用户始终围绕同一个账户边界理解风险。" },
     ],
   },
   {
     id: "payments",
-    title: "1Do 支付：一次授权与会话化结算",
+    title: "支付与会话化结算",
     blocks: [
-      { type: "paragraph", text: "支付不应该只依赖 token 合约自己实现 permit，也不应该要求每个支付 app 维护一套长期 allowance。1Do 把支付能力放在钱包 runtime：用户可以签 wallet-level typed data，之后由 relayer 或 session key 完成提交与结算。" },
-      { type: "paragraph", text: "ERC-8112 / ERC-8114 对应 wallet-level token / NFT transfer with signature。签名域绑定 wallet 地址，nonce 按资产与目标维度隔离，避免把每个 token 合约改造成 gasless 授权系统。" },
+      { type: "paragraph", text: "支付不应该只依赖代币合约自己实现 permit，也不应该要求每个支付应用维护一套长期授权额度。1Do 把支付能力放在钱包运行时：一次性转账可以走钱包级结构化数据签名，持续或高频支付可以走 Session Pay 的会话授权与运行时应用结算。" },
+      { type: "paragraph", text: "ERC-8112 / ERC-8114 对应钱包级代币 / NFT 签名转移，适合一次性或中继转账。签名域绑定钱包地址，nonce 按资产与目标维度隔离，避免把每个代币合约改造成免 gas 授权系统。" },
       { type: "code", text: erc8112Interface },
       { type: "code", text: erc8114Interface },
-      { type: "list", items: ["ERC-8112：缘由是把 token/native transfer with signature 放在钱包层；机制是 tokenTransferNonce(asset, to) 按 (asset, to) 隔离 nonce，tokenTransferWithSig 校验 EIP-712 + ERC-1271 后转账。", "ERC-8112 的好处：任意 ERC-20 都能获得 gasless / relayed transfer 能力，不要求 token 合约支持 EIP-3009、permit 或自定义签名标准。", "ERC-8114：缘由是把 NFT transfer with signature 放在钱包层；机制是 nftTransferNonce(asset, tokenId) 按 (asset, tokenId) 隔离 nonce，nftTransferWithSig 验签后 safeTransferFrom。", "ERC-8114 的好处：任意 ERC-721 都能被钱包层签名转移，不要求 NFT 合约自己实现新签名标准；nonce 在外部 transfer 前递增，降低签名复用风险。", "Red Packet、Gift、Pay 属于钱包原生能力，不是 Store runtime app。", "Session Pay 是 runtime app：用户签 session grant，session key 产生累计 settlement authorization，适合 API、AI agent、订阅和微支付。", "ERC-1271 负责 runtime 钱包签名验证；EIP-712 负责结构化授权内容。"] },
-      { type: "paragraph", text: "x402 可以作为 1Do 支付的 HTTP 接入方式：资源服务器先返回 402 Payment Required 和付款要求；客户端钱包根据要求生成 1Do wallet-level payment authorization；facilitator 或商户后端提交 tokenTransferWithSig 或 Session Pay settlement；确认后客户端重试请求并获得资源。这样 x402 负责 HTTP 层的付款协商，1Do runtime 负责链上授权、nonce、session 和结算边界。" },
-      { type: "list", items: ["面向一次性 API / 内容付费：可直接映射到 ERC-8112 tokenTransferWithSig。", "面向 AI agent、订阅和高频微支付：更适合映射到 Session Pay，用户先签 session grant，后续请求按限额与累计结算执行。", "面向只接受 USDC EIP-3009 的 x402 服务：可以通过 facilitator / adapter 兼容；1Do 主线仍倾向 wallet-level 授权，避免把 gasless 能力绑定到单个 token 标准。"] },
+      { type: "list", items: ["ERC-8112：代币和原生资产的签名转账放在钱包层，tokenTransferWithSig 校验 EIP-712 + ERC-1271 后转账。", "ERC-8114：NFT 的签名转移放在钱包层，nftTransferWithSig 验签后执行 safeTransferFrom。", "Session Pay 是独立运行时应用：用户签会话授权，会话密钥产生累计结算授权，并通过 Session Pay 自身运行时结算路径执行，不依赖 IERC8112。", "x402 可以作为 HTTP 接入方式：一次性付款映射到 ERC-8112；会话化付款映射到 Session Pay 会话结算。"] },
     ],
   },
   {
-    id: "will",
-    title: "遗产与长期账户能力",
+    id: "execution-flow",
+    title: "执行流程",
     blocks: [
-      { type: "paragraph", text: "1Do 的账户模型不仅服务即时交易，也服务长期账户安排。Will 是 runtime app：用户在自己的 wallet runtime 中创建遗产计划，定义受益人、权重、触发条件、执行人费用和版本。" },
-      { type: "paragraph", text: "遗产功能的核心不是把资产提前转移到遗产平台，而是在用户自己的账户边界内保存可验证的计划。触发条件满足后，executor 可以按计划执行尚未处理的资产分发。" },
-      { type: "list", items: ["用户资产在触发前仍保留在自己的 wallet 地址。", "计划可以使用 EIP-712 typed data 表达，便于用户理解和签名。", "ERC-1271 让 runtime wallet 验证遗产计划签名。", "app 负责遗产业务规则；wallet runtime 负责账户权限、执行边界和签名验证。"] },
+      { type: "ordered", items: ["用户打开 1Do Core 或 1Do Wallet，连接当前地址。", "如果地址尚未激活运行时，先完成 ERC-7702 运行时激活。", "用户在 1Do Core 中打开 Dex、NFT Market、Flash Loan、Will、Session Pay 等运行时应用。", "用户对某个应用执行本地 enableApp；平台注册表仍独立控制全局可执行性。", "用户进入应用，签署 EIP-712 意图、订单、会话授权、遗产计划或转移授权。", "交易通过 executeRuntimeApp(...)、executeWithTokenPull(...)、tokenTransferWithSig(...) 或应用自身结算路径执行。", "执行结束后，临时拉取上下文被清除；长期权限仍留在用户自己的钱包运行时边界内。"] },
     ],
   },
   {
-    id: "gas-comparison",
-    title: "Gas 与交互成本对比",
+    id: "miscellanea",
+    title: "杂项与关注",
     blocks: [
-      { type: "paragraph", text: "传统 DeFi 的成本不只是链上 gas 数字，还包括用户交互次数、长期授权风险和失败恢复成本。1Do 优先减少重复授权、减少账户迁移、减少 app 自建权限系统。" },
-      { type: "paragraph", text: "下面的 1Do 数字来自当前 core Forge gas benchmark；Uniswap、OpenSea / Seaport、USDC 自带授权侧为常见 gas limit 预算区间，实际值会随 router、订单类型、资产冷热状态、链和 calldata 变化。支付行同时列出首笔与同一 asset/to 第二笔：第二笔避开 ERC-20 接收方余额槽、wallet nonce 槽从 0 到非 0 的成本，更接近高频支付热路径。" },
+      { type: "paragraph", text: "1Do 的安全模型不是假设所有应用都可信，而是把应用能做什么限制在用户自己的钱包运行时边界内。触发执行的人可以是中继者、交易对手、维护者或普通调用者，但触发者不会因此获得钱包所有者权限。" },
+      { type: "list", items: ["所有者权限与触发权限分离：任何人可以触发已启用应用，但不能冒充所有者签名或修改所有者权限。", "本地启用与注册表门控分离：用户本地启用表达账户意愿，注册表表达平台全局可执行性。", "签名验证收敛到钱包运行时：EIP-712 结构化数据通过 ERC-1271 在用户账户边界内验证。", "嵌套运行时执行会被拒绝：应用不能制造新的运行时自调用帧来绕过执行锁和调用者纪律。"] },
+      { type: "paragraph", text: "1Do 不声称所有风险都会消失。更清晰的运行时边界可以减少长期授权、平台托管余额和应用自建权限系统带来的风险，但不能替代应用审计、用户判断和清晰的钱包签名展示。" },
+      { type: "list", items: ["1Do 不保证每个运行时应用的业务逻辑无风险。", "注册表门控不是用户判断的替代品。", "钱包原生授权减少长期授权额度和操作员授权，但不消除钓鱼签名、错误收款地址或恶意前端风险。", "ERC-7702 可用性依赖链、钱包、RPC 和签名工具支持。", "1Do 不要求今天的生态立即放弃 ERC-20 / ERC-721；长期资产标准方向与当前兼容路径可以并行。"] },
+    ],
+  },
+  {
+    id: "gas",
+    title: "Gas 与交互成本",
+    blocks: [
+      { type: "paragraph", text: "传统 DeFi 的成本不只是链上 gas 数字，还包括用户交互次数、长期授权风险和失败恢复成本。1Do 优先减少重复授权、减少账户迁移、减少应用自建权限系统。" },
+      { type: "paragraph", text: "下面的 1Do 数字来自当前 Core 的 Forge gas 基准测试；传统路径侧为常见 gas limit 预算区间，实际值会随路由器、订单类型、资产冷热状态、链和调用数据变化。" },
       { type: "code", text: zhGasComparison },
-      { type: "list", items: ["Dex vs Uniswap：Uniswap 类路径常见是 approve -> swap 两步；1Do Dex 的 maker 订单在链下签名，buyer 在 runtime 中一次成交，token pull 不留下 allowance。", "NFTMarket vs OpenSea：传统 NFT 市场常见需要 approve 或 setApprovalForAll，再 fulfill order；1Do NFTMarket 用订单签名 + wallet-native pull，避免长期 operator approval。", "支付 vs USDC 自带授权：USDC EIP-3009 能解决 USDC 自身 gasless transfer，但能力绑定在 USDC 合约；1Do ERC-8112 把签名转账放在 wallet runtime，因此任意 ERC-20 都可走同一钱包授权模型。", "x402：x402 减少的是 HTTP 支付协商成本；1Do 可以把 x402 的 payment payload 接到 ERC-8112 或 Session Pay，从而减少账号体系、API key、月结和每次独立授权的复杂度。"] },
-      { type: "paragraph", text: "因此 1Do 的 gas 优化不是单点追求“某个 opcode 更省”，而是减少需要上链的步骤和残留状态：少一次 approve，少一次 deposit，少一个平台余额，少一个长期 operator，就少一个 gas、风险和用户理解成本的来源。" },
-    ],
-  },
-  {
-    id: "flows",
-    title: "典型交互流程",
-    blocks: [
-      { type: "ordered", items: ["用户打开 1Do Wallet，连接当前地址。", "如果地址尚未激活 runtime，先完成 ERC-7702 runtime 激活。", "用户在 Store 发现 Dex、NFT Market、Flash Loan、Will、Session Pay 等 runtime apps。", "用户对某个 app 执行本地 enableApp；平台 registry 仍独立控制全局可执行性。", "用户进入 app，签署 EIP-712 intent、订单、session grant、will plan 或 transfer authorization。", "交易通过 executeRuntimeApp(...)、executeWithTokenPull(...)、tokenTransferWithSig(...) 等 runtime 路径执行。", "执行结束后，临时 pull 上下文被清除；长期权限仍留在用户自己的 wallet runtime 边界内。"] },
+      { type: "paragraph", text: "因此 1Do 的 gas 优化不是单点追求某个操作码更省，而是减少需要上链的步骤和残留状态：少一次 approve，少一次平台存入，少一个平台余额，少一个长期操作员授权，就少一个 gas、风险和用户理解成本的来源。" },
     ],
   },
   {
@@ -253,123 +260,134 @@ const zhSections: WhitepaperSection[] = [
     title: "结论",
     blocks: [
       { type: "paragraph", text: "1Do 不是要把钱包做成一个庞大的中心化应用框架，而是要把账户能力稳定地收敛到用户地址本身。" },
-      { type: "paragraph", text: "宏观上，1Do 希望用户激活一次账户 runtime，就能持续扩展 DeFi、支付、NFT、遗嘱、会话与未来 app。工程上，1Do 用 ERC-7702、ERC-8280、ERC-8284、ERC-8285、ERC-8112、ERC-8114、ERC-1271、EIP-712 等标准，把执行边界、签名、资产授权和 app enablement 放回钱包。" },
+      { type: "paragraph", text: "宏观上，1Do 希望用户激活一次账户运行时，就能持续扩展 DeFi、支付、NFT、遗产、会话与未来应用。工程上，1Do 用 ERC-7702、ERC-8280、ERC-8284、ERC-8285、ERC-8112、ERC-8114、ERC-1271、EIP-712 等标准，把执行边界、签名、资产授权和应用启用状态放回钱包。" },
+    ],
+  },
+  {
+    id: "references",
+    title: "参考来源",
+    blocks: [
+      { type: "list", items: ["Uniswap Labs, Introducing Permit2 & Universal Router, 2022-11-17: https://blog.uniswap.org/permit2-and-universal-router", "OpenSea Developer Documentation, Seaport: https://docs.opensea.io/docs/seaport", "OpenSea Developer Documentation, Get listing creation actions: https://docs.opensea.io/reference/create_listing_actions", "Tether, Supported Protocols and Integration Guidelines: https://tether.to/en/supported-protocols/", "Tether, FAQs: https://tether.to/faqs/", "Circle, 4 Ways to Authorize USDC Smart Contract Interactions, 2025-09-04: https://www.circle.com/blog/four-ways-to-authorize-usdc-smart-contract-interactions-with-circle-sdk", "EIP-3009, Transfer With Authorization: https://eips.ethereum.org/EIPS/eip-3009", "Coinbase Developer Documentation, x402 Overview: https://docs.cdp.coinbase.com/x402/welcome", "x402 Documentation, How x402 Works: https://docs.x402.org/core-concepts/how-x402-works", "Zelin Li, Qin Wang, Zhipeng Wang, Five Attacks on x402 Agentic Payment Protocol, 2026-05-12: https://arxiv.org/abs/2605.11781", "Ledger Support, Understanding Ethereum Token Approvals: https://support.ledger.com/article/Ethereum-Token-Approvals-Explained", "MetaMask Help Center, What is a token approval?: https://support.metamask.io/stay-safe/safety-in-web3/what-is-a-token-approval/", "Chainalysis, Targeted Approval Phishing Scams See Explosive Growth Over Last Two Years, 2023-12-14: https://www.chainalysis.com/blog/approval-phishing-cryptocurrency-scams-2023/", "Chainalysis, Approval Phishing: From Just One Case to Full-Scale Disruption, 2026-06-17: https://www.chainalysis.com/blog/what-is-approval-phishing/", "Scam Sniffer Reports archive, 2024 and 2025 wallet drainer annual loss estimates: https://drops.scamsniffer.io/category/reports/", "Chainalysis, $2.2 Billion Stolen from Crypto Platforms in 2024, 2024-12-19: https://www.chainalysis.com/blog/crypto-hacking-stolen-funds-2025/", "Chainalysis, 2025 Crypto Crime Mid-year Update, 2025-07-17: https://www.chainalysis.com/blog/2025-crypto-crime-mid-year-update/", "TRM Labs, $2.2 billion was stolen in crypto-related hacks in 2024, 2025-03-17: https://www.trmlabs.com/resources/blog/category-deep-dive-2-2-billion-was-stolen-in-crypto-related-hacks-in-2024"] },
     ],
   },
 ];
 
 const enSections: WhitepaperSection[] = [
   {
-    id: "vision",
-    title: "Activate Once, Account as Platform",
+    id: "abstract",
+    title: "Abstract",
     blocks: [
-      { type: "paragraph", text: "1Do's vision is to move the wallet from a signing tool into the user's own onchain execution environment. Users should not need to migrate assets, create new accounts, or relearn a new permission model for every trading, payment, subscription, will, NFT market, or future app flow." },
-      { type: "paragraph", text: "In 1Do, one address is the user's account, asset boundary, and app execution boundary. The user activates a runtime once, then keeps adding capability to the same address: discover apps, enable apps, execute apps, sign intents, and settle transactions." },
-      { type: "paragraph", text: "More concretely, 1Do wants account-as-platform: the user's address is the wallet, the app runtime, and the settlement boundary for payments and DeFi. Apps should not require users to move assets into platform accounts, vaults, or custody contracts before they can use them." },
-      { type: "list", items: ["The account should follow the user, not one app.", "Asset authority should converge in the wallet, not scatter across tokens, routers, markets, and payment contracts.", "Apps should innovate independently without redefining the wallet trust boundary.", "The user experience should move from understanding contract calls to understanding the action being completed."] },
+      { type: "paragraph", text: "1Do is a next-generation onchain account and application runtime platform. Its goal is not to create another custodial application surface, but to converge account authority, asset authorization, signature validation, and app execution boundaries back to the user's own address." },
+      { type: "paragraph", text: "After activating an ERC-7702 runtime, the same address becomes the user's wallet, app runtime, and settlement boundary for DeFi, payments, NFTs, wills, sessions, and future applications. Apps can innovate independently, but they cannot move users out of their own account boundary." },
+      { type: "list", items: ["The account follows the user, not one app.", "Asset authority converges in the wallet runtime, not across tokens, routers, markets, and payment contracts.", "Apps enter through Core, execute through runtime, and settle through wallet-native authorization.", "The user experience shifts from understanding low-level contract calls to understanding the action being completed."] },
     ],
   },
   {
-    id: "core-design",
-    title: "Core Design: Less Is More",
+    id: "concepts",
+    title: "Existing Concepts",
     blocks: [
-      { type: "paragraph", text: "1Do's core design view is less is more: smaller asset contracts, clearer app boundaries, and wallet runtime ownership of account authority. Removing one intermediate account, one class of long-lived approval, or one app-owned permission system often matters more than adding another abstraction." },
-      { type: "list", items: ["The asset layer should do less: tokens and NFTs record balances and ownership instead of carrying every user-level permission feature.", "The account layer should own more: signature validation, authority boundaries, sessions, pull context, and app enablement converge in the user's wallet runtime.", "The app layer stays independent: Dex, NFT Market, Will, and Session Pay keep their business rules without copying wallet-core logic.", "The interaction layer removes steps: prefer one signature, one execution, and one settlement over approve -> deposit -> execute -> withdraw.", "The safety layer leaves less residue: after execution, no reusable allowance, operator approval, or platform-custodied balance should remain."] },
+      { type: "paragraph", text: "Early Ethereum apps assumed EOAs. An EOA has no code, no local state, and no way to express fine-grained execution policy, so DeFi pushed permission logic down into tokens, routers, markets, vaults, and app contracts." },
+      { type: "paragraph", text: "ERC-20 approve(spender, amount) plus allowance(owner, spender) is the common DeFi interaction model. The user approves a router or app first, then the app later pulls assets with transferFrom. NFTs have the same pattern: approve, setApprovalForAll, and operator approval place user-level authority in asset or marketplace contracts." },
+      { type: "subheading", text: "Uniswap" },
+      { type: "paragraph", text: "Uniswap is one of Ethereum's most important decentralized exchange protocols. Its core function is automated market making and swapping between ERC-20 assets. It was built in the EOA-account and ERC-20-asset environment: the user's wallet address holds tokens, a trading contract or router receives ERC-20 allowance, and the protocol moves assets into pools to complete swaps and settlement." },
+      { type: "paragraph", text: "The strength of this model is openness, composability, and no platform-custodied balance. Almost any ERC-20 can enter the same trading path. The friction is that a user's first interaction with a given ERC-20 usually cannot be a direct swap: it is first an approve transaction, then a swap transaction. In that first-use flow, approve is commonly 1 of 2 user transactions, or 50% of the transaction and confirmation count. An EOA cannot natively express an account policy such as “only this swap, only this quote, and clear authorization after execution,” so authority has to live in token.allowance or in a spender model such as Permit2. Permit2 and Universal Router improve reuse, signing, and routing, but users still need to understand which asset, amount, duration, and external contract they are authorizing." },
+      { type: "subheading", text: "OpenSea" },
+      { type: "paragraph", text: "OpenSea is a major NFT marketplace, and Seaport is its open order protocol. NFT markets also come from the EOA plus ERC-721 / ERC-1155 model: NFTs remain at the user's address, the user signs an order, and the marketplace or execution contract transfers the NFT and payment asset when the order is fulfilled." },
+      { type: "paragraph", text: "To let the market complete a sale later, users commonly cannot only sign one listing or fulfillment order; they also need approve or setApprovalForAll on the NFT collection first. This lowers later listing and fulfillment friction and makes offchain orderbooks possible, but first-time marketplace use still includes an extra transaction, extra gas, and an extra wallet confirmation. The operator-approval boundary is “can this contract transfer the collection,” not “is this one order being filled.” If a user approves a malicious operator, signs a disguised order, or leaves approval behind, the risk can cover the whole collection rather than one listing." },
+      { type: "subheading", text: "USDT and USDC" },
+      { type: "paragraph", text: "USDT and USDC are two of the most widely used dollar stablecoins for onchain payments. Unlike general DeFi trading, payment is less about routing through the best market and more about making payer, recipient, amount, asset, network, and validity clear enough for websites, APIs, agents, or relayers to settle reliably. USDT's strength is broad liquidity, trading-pair coverage, and multichain distribution, making it useful for transfers and settlement across many venues. USDC's strength is developer tooling, compliance interfaces, and programmable-payment support, especially for checkout, gasless payment, API billing, and business settlement." },
+      { type: "paragraph", text: "Many USDT / USDC payments still use ERC-20 transfer or approve plus transferFrom. USDC also supports EIP-3009 transferWithAuthorization / receiveWithAuthorization, where the payer signs EIP-712 typed data for one concrete transfer and the contract uses a nonce and validity window to prevent replay without first writing USDC.allowance. x402 moves payment requests into HTTP 402 semantics, allowing APIs, content, AI agents, and automated clients to pay per request with USDC and other stablecoins. These paths improve payment programmability, but risk does not disappear: USDT / USDC still involve wrong-chain transfers, wrong recipients, centralized issuer and freezing policies, contract compatibility, long-lived allowance, signature phishing, facilitator verification, frontends, and agent policy. If a user or agent cannot clearly understand what resource is being paid for, how much is being paid, which chain is used, and who can settle it, payment signatures can still be phished or abused." },
+      { type: "subheading", text: "Risks and Costs in Existing Apps and ERC-20 Models" },
+      { type: "paragraph", text: "The shared base across these models is EOA accounts, ERC-20 / ERC-721 approvals, external spenders / operators, and user intent interpreted through frontends and signing interfaces. This base enabled early open finance, but it also spreads asset authority across token allowance, NFT operators, routers, markets, payment contracts, and custody platforms. The first cost is interaction and gas: Ledger's token-approval explainer notes that each approval is a separate onchain transaction with its own gas fee; in a typical first ERC-20 app flow, approve plus execute means 2 transactions, so approve is 50% of the transaction count. In the common gas budgets used in this whitepaper, ERC-20 approve is usually about 50k-75k gas, while NFT approve / setApprovalForAll is usually about 50k-100k gas. That gas does not complete the user's intended swap, listing, or payment; it only opens permission for later app execution." },
+      { type: "paragraph", text: "The risk should not be reduced to one fixed probability such as “what percentage of stolen funds comes from malicious approvals,” because reports use different denominators for stolen funds, scams, phishing, wallet drainers, and approval phishing. The conservative conclusion is that approve-style long-lived authorization has become a scalable attack surface." },
+      { type: "paragraph", text: "Public data is already large enough to matter. In December 2023, Chainalysis estimated roughly $1.0 billion lost to approval phishing from its sample since May 2021, including about $516.8 million in 2022 and $374.6 million through November 2023; in June 2026, Chainalysis also reported that Operation Spincaster processed more than 7,000 leads tied to about $162 million in losses. Scam Sniffer's annual reporting estimated about $494 million lost to EVM wallet drainer phishing in 2024, falling to about $84 million in 2025. These losses do not belong to one project; they come from reusable, disguiseable, and long-lived authority in the existing account and asset-authorization model." },
+      { type: "paragraph", text: "Another common model is deposit-before-use: exchanges, lending pools, vaults, orderbooks, or custody contracts receive user assets first, then handle internal accounting, matching, settlement, or liquidation. This simplifies app logic, but moves the user's asset boundary from the wallet to the platform contract. This is not an abstract risk either: Chainalysis estimated about $2.2 billion stolen from crypto platforms in 2024, with DeFi accounting for the largest share of stolen assets in Q1 and centralized services becoming the most targeted platform type in Q2 and Q3; by mid-2025, more than $2.17 billion had already been stolen from cryptocurrency services, including the roughly $1.5 billion Bybit incident. TRM Labs also estimated about $2.2 billion lost to hacks and exploits in 2024, with more than $7.7 billion lost over three years. Deposit-based models concentrate many users' assets inside the same service, contract, or key-management system, so failures in business logic, access control, private-key management, or cross-chain components can amplify losses." },
+      { type: "list", items: ["Benefit: simple and composable; much of today's DeFi and NFT market infrastructure started this way.", "Cost: approval is persistent state that may remain after the transaction.", "Cost: approval targets a spender or operator, not one concrete business action.", "Cost: approve plus execute often means two transactions and two wallet confirmations.", "Cost: deposit-based platforms make availability and exit paths depend on platform logic."] },
     ],
   },
   {
-    id: "eoa-and-defi",
-    title: "EOA Accounts and Current DeFi",
+    id: "state-model",
+    title: "State Model Difference",
     blocks: [
-      { type: "paragraph", text: "Early Ethereum apps assumed EOAs. An EOA has no code, no local state, and no way to express fine-grained execution policy, so DeFi pushed a large amount of permission logic down into tokens, routers, markets, vaults, and app contracts." },
-      { type: "paragraph", text: "ERC-20 approve(spender, amount) plus allowance(owner, spender) is the most common interaction model in today's DeFi. The user approves a router or app first, then the app later pulls assets with transferFrom during a swap, payment, subscription, or settlement." },
-      { type: "paragraph", text: "Another common DeFi experience is moving assets into a platform before using it: users deposit into an exchange, lending pool, vault, orderbook, or custody contract, and the platform then handles internal accounting, matching, settlement, or liquidation. That simplifies app logic but moves the user's asset boundary from their wallet to the platform contract." },
-      { type: "list", items: ["Benefit: simple and composable; Uniswap, aggregators, USDC payments, and custodial collection flows were bootstrapped this way.", "Cost: approval is persistent state that can remain after the transaction is done.", "Cost: approval is granted to a spender contract, not to one concrete business action.", "Cost: approve plus execution is often two transactions and two wallet prompts.", "Cost: deposit-based platforms require users to move assets into platform contracts, making availability and exit paths depend on platform logic.", "Cost: wallets rarely explain what an approval may enable in the future."] },
-      { type: "paragraph", text: "NFTs have the same pattern: approve, setApprovalForAll, operator approval, and safeTransferFrom put user-level authority into NFT contracts or marketplaces. That was a reasonable EOA-era engineering compromise, but ERC-7702 and contract wallets make it possible to move authority back to the user's own account runtime." },
+      { type: "paragraph", text: "In traditional DeFi, the user address is mostly the signer, while state and authority live in external protocols: token allowance, NFT operators, pools, vaults, orders, and platform balances." },
+      { type: "diagram", variant: "traditional", language: "en" },
+      { type: "paragraph", text: "1Do moves the runtime back to the user's address. `executeRuntimeApp(app, data)` delegatecalls app logic into the user-account frame; `enabledApps`, nonces, and app state use namespaced storage, while asset-pull authority exists only for one execution window." },
+      { type: "diagram", variant: "onedo", language: "en" },
+      { type: "list", items: ["Traditional DeFi: the protocol is the state center; the user account is usually the signing entry point.", "1Do: the user address is the state and runtime center; apps become pluggable logic."] },
     ],
   },
   {
-    id: "asset-direction",
-    title: "Asset Standard Direction",
+    id: "onedo",
+    title: "1Do",
     blocks: [
-      { type: "paragraph", text: "1Do remains compatible with ERC-20 and ERC-721 because they are still the dominant asset interfaces. But in a contract-wallet environment, asset contracts do not need to carry every user-permission feature. Asset contracts should become closer to balance and ownership ledgers, while the account runtime expresses authorization, composition, sessions, pull flows, and clear signing." },
+      { type: "subheading", text: "The Account Itself Is the App Runtime" },
+      { type: "paragraph", text: "1Do's core claim is that the wallet address itself is the app execution boundary. The main account path is ERC-7702: the connected address is the runtime address; users do not need to migrate assets to a second smart-wallet address, mint an NFT, or enable an asset-management middle layer before using runtime apps." },
+      { type: "paragraph", text: "1Do Core is the unified product entry for connecting the wallet, entering runtime apps, and opening account capabilities such as Dex, NFT Market, Flash Loan, Will, and Session Pay. Core is the user experience surface; runtime is the account execution boundary. Test-asset faucets are testnet support tools, not wallet-runtime capabilities themselves." },
+      { type: "code", text: runtimeHostInterface },
+      { type: "paragraph", text: "The runtime enters app execution through an ERC-8280-style executeRuntimeApp(app, data), while enableApp / disableApp records which apps an address allows inside its own wallet runtime. Global platform gating and user-local enablement are separate gates; current core runtime executability can be summarized as:" },
+      { type: "code", text: "wallet.isAppEnabled(app) && registry.isEntitled(address(0), app)" },
+      { type: "list", items: ["ERC-7702 lets an EOA address gain executable contract behavior without migrating assets to a new smart-wallet address.", "ERC-8280 defines the minimum runtime app host surface; executeRuntimeApp is the permissionless trigger entry point.", "ERC-1271 lets runtime wallets validate EIP-712 intents, orders, payment authorizations, and will plans.", "ERC-7201 uses namespaced storage to isolate host state and app state.", "ERC-165 lets frontends, relayers, and apps discover runtime, pull, transfer-with-signature, and related capabilities."] },
+    ],
+  },
+  {
+    id: "asset-layer",
+    title: "Asset Layer and Wallet-Native Authorization",
+    blocks: [
+      { type: "paragraph", text: "1Do remains compatible with ERC-20 and ERC-721 because they are still the dominant asset interfaces. But in a contract-wallet environment, asset contracts do not need to carry every user-permission feature. Asset contracts should behave more like balance and ownership ledgers, while the account runtime expresses authorization, composition, sessions, pull flows, and clear signing." },
       { type: "paragraph", text: "ERC-7196 / ERC-7561 point toward smaller token / NFT contracts: ERC-7196 removes transferFrom, approve, and allowance from ERC-20; ERC-7561 removes approve, setApprovalForAll, getApproved, isApprovedForAll, and safeTransferFrom from ERC-721, moving user-level authority upward into contract wallets." },
       { type: "code", text: erc7196Interface },
       { type: "code", text: erc7561Interface },
-      { type: "list", items: ["ERC-7196 exists because ERC-20 allowance is an EOA-era compromise; long-lived approvals, unlimited approvals, and spender risk all come from asset contracts carrying user authority state.", "ERC-7196 benefits: the token contract keeps totalSupply, balanceOf, transfer, and Transfer event, making the asset layer closer to a ledger, reducing logic and audit surface, and making it easier for wallet runtimes, pull standards, and payment standards to reuse the same asset.", "ERC-7561 exists because ERC-721 approval / operator approval keeps NFT user authority in the asset contract, turning a marketplace, aggregator, or operator failure into broader account-asset risk.", "ERC-7561 benefits: the NFT contract keeps ownerOf, balanceOf, transferFrom, and Transfer event; authorization moves from “this operator can keep moving my NFTs” to “my wallet runtime validates and releases this specific execution”.", "ERC-7196 / ERC-7561 do not require today's ecosystem to abandon ERC-20 / ERC-721. They define a cleaner contract-wallet-era layering: asset contracts record asset facts, while the account runtime expresses user intent, authority, limits, sessions, and revocation."] },
-    ],
-  },
-  {
-    id: "onedo-account",
-    title: "The 1Do Account",
-    blocks: [
-      { type: "paragraph", text: "1Do's core claim is that the wallet address itself is the app execution boundary. The current mainline product has no second predicted smart wallet and no app NFT enablement model; users do not need to migrate assets, create a new wallet address, mint an app NFT, or enable a separate asset-manager app before using 1Do runtime apps." },
-      { type: "paragraph", text: "The main account path is ERC-7702: the connected address is the runtime address. The runtime enters app execution through an ERC-8280-style executeRuntimeApp(app, data), while enableApp / disableApp records which apps this address has enabled locally." },
-      { type: "code", text: runtimeHostInterface },
-      { type: "paragraph", text: "Global platform gating and user-local enablement are separate gates. The platform registry decides whether an app logic is allowed to run; the wallet's local state decides whether this address enabled that app. In the current core runtime, executability is summarized as:" },
-      { type: "code", text: "wallet.isAppEnabled(app) && registry.isEntitled(address(0), app)" },
-      { type: "paragraph", text: "The reason behind these ERCs is consistent: EOAs lack code and local state, so traditional apps placed authority in external contracts. 1Do uses a 7702 runtime to bring code, state, signature validation, and app enablement back to the user's address." },
-      { type: "list", items: ["ERC-7702 exists to let an EOA address gain executable contract behavior; the benefit is that users do not need to migrate assets to a new smart-wallet address, because the connected address is the working address.", "ERC-8280 exists to standardize the minimum runtime app host surface; enableApp / disableApp / isAppEnabled manage local enablement and executeRuntimeApp is the permissionless trigger entry point.", "ERC-8280 benefits: any relayer, counterparty, keeper, or executor can trigger an enabled app without gaining wallet-owner authority; app execution happens in host context, return data and revert data are bubbled, and nested runtime execution is rejected.", "ERC-1271 exists because contract accounts cannot rely on EOA ecrecover assumptions; the benefit is runtime-wallet validation for EIP-712 intents, orders, payment authorizations, and will plans.", "ERC-7201 exists because runtime hosts and multiple apps can share one execution environment; the benefit is independent namespaced storage for host state and each app state, reducing the chance that an app overwrites account-core state.", "ERC-165 supports capability discovery for runtime, pull, transfer-with-signature, and permit interfaces, so frontends, relayers, and apps can detect which standards a wallet supports."] },
-    ],
-  },
-  {
-    id: "runtime-app-standards",
-    title: "Runtime App Standards and Limits",
-    blocks: [
-      { type: "paragraph", text: "1Do lets apps keep their own business logic, but runtime apps must respect the account boundary. Apps may define orders, pricing, settlement, expiry, events, and errors; they must not recreate a separate wallet-core permission system." },
-      { type: "list", items: ["Execution must go through the runtime entry point: the main path is executeRuntimeApp(app, data).", "Apps must respect local enablement: global listing does not automatically enable an app for a wallet.", "Apps must respect registry gating: a platform-blocked app should not continue executing.", "Apps must not depend on long-lived token allowance or NFT operator approval as the main settlement path.", "Apps must not manufacture new external self-call frames to bypass runtime caller discipline.", "App state may live in app contracts, but user authority, signature validation, pull context, and execution locks belong in the wallet runtime."] },
-      { type: "paragraph", text: "These limits separate app innovation from account safety: Dex, NFT Market, Flash Loan, Will, and Session Pay can evolve independently, while none of them can move the user out of their own wallet boundary." },
-    ],
-  },
-  {
-    id: "onedo-defi",
-    title: "1Do DeFi: Intents, Settlement, and Bounded Authority",
-    blocks: [
-      { type: "paragraph", text: "1Do DeFi does not try to turn every trade into one AMM. Dex is an intent-based runtime app: makers sign EIP-712 orders offchain, relays distribute intents offchain, and buyers settle onchain through their own 7702 runtime." },
-      { type: "paragraph", text: "The key change is not the absence of authorization, but replacing long-lived allowance with execution-local, bounded, wallet-native authorization. ERC-8284 / ERC-8285 correspond to token / NFT pull: the app can collect assets during one execution without leaving reusable allowance or operator approval behind." },
+      { type: "paragraph", text: "In the current compatible path, 1Do uses ERC-8284 / ERC-8285 to replace long-lived token allowance and NFT operator approval with pull contexts scoped to one execution window." },
       { type: "code", text: tokenPullInterface },
       { type: "code", text: nftPullInterface },
-      { type: "list", items: ["ERC-8284 exists to replace long-lived token allowance; executeWithTokenPull(target, data, asset, maxAmount) creates a temporary pull context bound to target, asset, and remainingAmount.", "ERC-8284 benefits: the target can decide the final amount during execution, but tokenPullToCaller can only be called by the bound target, cumulative pulls cannot exceed the cap, and context must be cleared before success or revert returns.", "ERC-8285 exists to replace long-lived NFT operator approval; executeWithNftPull(target, data, asset, tokenId) authorizes one target to pull one specific NFT during one execution.", "ERC-8285 benefits: nftPullToCaller must match target, asset, and tokenId; after the execution window ends, every pull for that context must fail, avoiding reusable operator authority.", "Dex prefers executeWithTokenPull(...), and the current signed-order path is full-fill-only.", "NFT Market keeps market-specific order semantics while settlement uses wallet-native pull.", "Flash Loan exposes ERC-3156 flash lender / borrower semantics, turning enabled wallet balances into a liquidity capability.", "EIP-712 represents orders, intents, and authorizations; ERC-7730 helps present signatures or transactions as clearer human-readable intents."] },
+      { type: "list", items: ["Token pull binds target, asset, and remainingAmount; cumulative pull cannot exceed the cap.", "NFT pull binds target, asset, and tokenId; one target can pull one specific NFT during one execution.", "Context must be cleared before success or revert returns; after the execution window ends, pulls must fail.", "The result is no reusable allowance or operator approval left behind."] },
+    ],
+  },
+  {
+    id: "applications",
+    title: "Applications",
+    blocks: [
+      { type: "paragraph", text: "Runtime apps in 1Do Core do not move user assets into a new platform account. They execute business logic inside the user's own wallet runtime. Each app keeps its business model, while settlement, signature validation, asset authorization, and execution boundaries converge in the same account runtime." },
+      { type: "list", items: ["Dex: makers sign EIP-712 orders offchain, and buyers settle once through their own 7702 runtime. Compared with approve -> swap, Dex does not require long-lived token allowance or pre-depositing assets into a trading platform.", "NFT Market: order and market rules live in the market app, while NFT or payment settlement uses wallet-native pull. Compared with setApprovalForAll, users do not need to grant a marketplace or aggregator long-term authority over an entire NFT collection.", "Flash Loan: enabled wallet balances become composable liquidity while remaining inside the user's account boundary.", "Will: inheritance plans remain inside the user's account semantics, and assets stay at the wallet address before the trigger; an executor can only process undistributed assets according to the plan and runtime rules.", "Session Pay: built for APIs, AI agents, subscriptions, and high-frequency micropayments. The user signs a session grant once, and later settlement authorizations execute within limits, periods, and cumulative amounts."] },
+      { type: "paragraph", text: "The shared advantage is not one isolated gas number. It is fewer migrations, fewer long-lived approvals, fewer platform balances, fewer repeated signatures, and a risk model users can understand around one account boundary." },
     ],
   },
   {
     id: "payments",
-    title: "1Do Payments: One Authorization and Session Settlement",
+    title: "Payments and Session Settlement",
     blocks: [
-      { type: "paragraph", text: "Payments should not depend only on token-specific permit support, and each payment app should not maintain its own long-lived allowance system. 1Do puts payment authority in the wallet runtime: the user signs wallet-level typed data, then a relayer or session key can submit and settle." },
-      { type: "paragraph", text: "ERC-8112 / ERC-8114 correspond to wallet-level token / NFT transfer with signature. The signing domain binds to the wallet address, and nonces are isolated by asset and recipient dimensions, avoiding the need to turn every token contract into a gasless authorization carrier." },
+      { type: "paragraph", text: "Payments should not depend only on token-specific permit support, and each payment app should not maintain its own long-lived allowance system. 1Do puts payment authority in the wallet runtime: one-off transfers can use wallet-level typed data, while continuous or high-frequency payments can use Session Pay session grants and runtime app settlement." },
+      { type: "paragraph", text: "ERC-8112 / ERC-8114 correspond to wallet-level token / NFT transfer with signature, which fits one-off or relayed transfers. The signing domain binds to the wallet address, and nonces are isolated by asset and recipient dimensions." },
       { type: "code", text: erc8112Interface },
       { type: "code", text: erc8114Interface },
-      { type: "list", items: ["ERC-8112 exists to put token/native transfer with signature at the wallet layer; tokenTransferNonce(asset, to) scopes nonce by (asset, to), and tokenTransferWithSig validates EIP-712 + ERC-1271 before transfer.", "ERC-8112 benefits: arbitrary ERC-20 tokens gain gasless or relayed transfer support without requiring EIP-3009, permit, or any custom signature feature in the token contract.", "ERC-8114 exists to put NFT transfer with signature at the wallet layer; nftTransferNonce(asset, tokenId) scopes nonce by (asset, tokenId), and nftTransferWithSig validates then safeTransferFroms.", "ERC-8114 benefits: arbitrary ERC-721 NFTs can be transferred by wallet-level signature without each NFT contract implementing a new signature standard; nonce increments before external transfer reduce signature-reuse risk.", "Red Packet, Gift, and Pay are wallet-native capabilities, not Store runtime apps.", "Session Pay is a runtime app: the user signs a session grant, the session key produces cumulative settlement authorizations, and the model fits APIs, AI agents, subscriptions, and micropayments.", "ERC-1271 validates runtime wallet signatures; EIP-712 structures the authorization content."] },
-      { type: "paragraph", text: "x402 can be an HTTP entry point for 1Do payments: the resource server returns 402 Payment Required and payment requirements; the client wallet creates a 1Do wallet-level payment authorization; a facilitator or merchant backend submits tokenTransferWithSig or Session Pay settlement; after confirmation, the client retries and receives the resource. x402 handles HTTP payment negotiation, while the 1Do runtime handles onchain authorization, nonces, sessions, and settlement boundaries." },
-      { type: "list", items: ["For one-off API or content payments, the flow can map directly to ERC-8112 tokenTransferWithSig.", "For AI agents, subscriptions, and high-frequency micropayments, Session Pay is a better fit: the user signs a session grant once, then later requests settle within limits and cumulative authorization.", "For x402 services that only accept USDC EIP-3009, a facilitator or adapter can bridge compatibility; the 1Do mainline still prefers wallet-level authorization so gasless payment capability is not tied to one token standard."] },
+      { type: "list", items: ["ERC-8112 puts token/native transfer with signature at the wallet layer; tokenTransferWithSig validates EIP-712 + ERC-1271 before transfer.", "ERC-8114 puts NFT transfer with signature at the wallet layer; nftTransferWithSig validates then safeTransferFroms.", "Session Pay is an independent runtime app: session grants and cumulative settlement authorizations execute through Session Pay's own runtime settlement path, not through IERC8112.", "x402 can be an HTTP entry point: one-off payments map to ERC-8112; session payments map to Session Pay session settlement."] },
     ],
   },
   {
-    id: "will",
-    title: "Will and Long-Term Account Capability",
+    id: "execution-flow",
+    title: "Execution Flow",
     blocks: [
-      { type: "paragraph", text: "1Do's account model is not only for immediate transactions. Will is a runtime app: the user creates an inheritance plan inside their own wallet runtime, defining beneficiaries, weights, trigger conditions, executor fees, and plan version." },
-      { type: "paragraph", text: "The point of the inheritance feature is not to move assets into an inheritance platform ahead of time. The plan remains verifiable at the user's account boundary. Once trigger conditions are met, an executor can settle unprocessed assets according to the plan." },
-      { type: "list", items: ["Assets remain at the user's wallet address before the trigger.", "The plan can be expressed as EIP-712 typed data so the user can understand and sign it.", "ERC-1271 lets the runtime wallet validate will-plan signatures.", "The app owns inheritance business rules; the wallet runtime owns account authority, execution boundary, and signature validation."] },
+      { type: "ordered", items: ["The user opens 1Do Core or 1Do Wallet and connects the current address.", "If the address has not activated runtime yet, the user activates the ERC-7702 runtime.", "The user opens runtime apps such as Dex, NFT Market, Flash Loan, Will, and Session Pay in 1Do Core.", "The user locally enables an app with enableApp; the platform registry still controls global executability independently.", "The user enters the app and signs an EIP-712 intent, order, session grant, will plan, or transfer authorization.", "The transaction executes through executeRuntimeApp(...), executeWithTokenPull(...), tokenTransferWithSig(...), or the app's own settlement path.", "After execution, temporary pull context is cleared; long-term authority remains inside the user's own wallet runtime boundary."] },
     ],
   },
   {
-    id: "gas-comparison",
-    title: "Gas and Interaction Cost Comparison",
+    id: "miscellanea",
+    title: "Miscellanea and Concerns",
     blocks: [
-      { type: "paragraph", text: "The cost of traditional DeFi is not only raw chain gas. It also includes the number of user interactions, persistent approval risk, and the cost of recovering from failed or stale permissions. 1Do prioritizes fewer repeated approvals, fewer account migrations, and fewer app-owned permission systems." },
-      { type: "paragraph", text: "The 1Do numbers below come from the current core Forge gas benchmarks. The Uniswap, OpenSea / Seaport, and USDC-native authorization side is shown as common gas-limit budget ranges; actual values vary by router, order type, hot or cold asset state, chain, and calldata. The payments row shows both the first transfer and the second transfer for the same asset/to pair: the second transfer avoids zero-to-nonzero ERC-20 recipient balance and wallet nonce slots, so it better represents a hot high-frequency payment path." },
+      { type: "paragraph", text: "1Do's security model does not assume every app is trusted. Instead, it constrains what apps can do inside the user's own wallet runtime boundary. A relayer, counterparty, keeper, or ordinary caller may trigger execution, but triggering an enabled app does not grant wallet-owner authority." },
+      { type: "list", items: ["Owner authority and trigger authority are separate.", "Local enablement and registry gating are separate.", "Signature validation converges in the wallet runtime through ERC-1271 and EIP-712.", "Nested runtime execution is rejected so apps cannot bypass execution locks or caller discipline."] },
+      { type: "paragraph", text: "1Do does not claim that all risk disappears. A clearer runtime boundary can reduce risks from long-lived approval, platform-custodied balances, and app-owned permission systems, but it does not replace app audits, user judgment, or clear wallet signing displays." },
+      { type: "list", items: ["1Do does not guarantee that every runtime app's business logic is risk-free.", "Registry gating is not a substitute for user judgment.", "Wallet-native authorization reduces long-lived allowance and operator approval, but does not remove phishing signatures, wrong recipient addresses, or malicious frontend risk.", "ERC-7702 availability depends on chain, wallet, RPC, and signing-tool support.", "1Do does not require today's ecosystem to immediately abandon ERC-20 or ERC-721."] },
+    ],
+  },
+  {
+    id: "gas",
+    title: "Gas and Interaction Cost",
+    blocks: [
+      { type: "paragraph", text: "The cost of traditional DeFi is not only raw chain gas. It also includes user interactions, persistent approval risk, and the cost of recovering from failed or stale permissions. 1Do prioritizes fewer repeated approvals, fewer account migrations, and fewer app-owned permission systems." },
+      { type: "paragraph", text: "The 1Do numbers below come from the current core Forge gas benchmarks. Traditional paths are shown as common gas-limit budget ranges; actual values vary by router, order type, asset state, chain, and calldata." },
       { type: "code", text: enGasComparison },
-      { type: "list", items: ["Dex vs Uniswap: Uniswap-style paths commonly require approve -> swap; 1Do Dex has the maker sign offchain and the buyer settle once through runtime, with token pull leaving no allowance behind.", "NFTMarket vs OpenSea: traditional NFT markets commonly require approve or setApprovalForAll before order fulfillment; 1Do NFTMarket uses signed orders plus wallet-native pull, avoiding long-lived operator approval.", "Payments vs USDC-native authorization: USDC EIP-3009 solves gasless transfer for USDC itself, but the capability is tied to the USDC contract; 1Do ERC-8112 puts signed transfer in the wallet runtime so arbitrary ERC-20 assets can use one wallet authorization model.", "x402: x402 reduces HTTP payment negotiation cost; 1Do can connect x402 payment payloads to ERC-8112 or Session Pay, reducing accounts, API keys, monthly billing, and repeated standalone authorization."] },
       { type: "paragraph", text: "So 1Do's gas optimization is not only about making one opcode cheaper. It removes steps and residue: one less approve, one less deposit, one less platform balance, and one less long-lived operator are each fewer sources of gas cost, risk, and user confusion." },
-    ],
-  },
-  {
-    id: "flows",
-    title: "Typical Interaction Flow",
-    blocks: [
-      { type: "ordered", items: ["The user opens 1Do Wallet and connects the current address.", "If the address has not activated runtime yet, the user activates the ERC-7702 runtime.", "The user discovers runtime apps such as Dex, NFT Market, Flash Loan, Will, and Session Pay in Store.", "The user locally enables an app with enableApp; the platform registry still controls global executability independently.", "The user enters the app and signs an EIP-712 intent, order, session grant, will plan, or transfer authorization.", "The transaction executes through runtime paths such as executeRuntimeApp(...), executeWithTokenPull(...), or tokenTransferWithSig(...).", "After execution, temporary pull context is cleared; long-term authority remains inside the user's own wallet runtime boundary."] },
     ],
   },
   {
@@ -378,6 +396,13 @@ const enSections: WhitepaperSection[] = [
     blocks: [
       { type: "paragraph", text: "1Do is not trying to turn wallets into a giant centralized app framework. It is trying to converge account capability onto the user's own address." },
       { type: "paragraph", text: "At the macro level, 1Do wants users to activate one account runtime and keep extending DeFi, payments, NFTs, wills, sessions, and future apps. At the engineering level, 1Do uses standards such as ERC-7702, ERC-8280, ERC-8284, ERC-8285, ERC-8112, ERC-8114, ERC-1271, and EIP-712 to move execution boundaries, signatures, asset authority, and app enablement back into the wallet." },
+    ],
+  },
+  {
+    id: "references",
+    title: "References",
+    blocks: [
+      { type: "list", items: ["Uniswap Labs, Introducing Permit2 & Universal Router, 2022-11-17: https://blog.uniswap.org/permit2-and-universal-router", "OpenSea Developer Documentation, Seaport: https://docs.opensea.io/docs/seaport", "OpenSea Developer Documentation, Get listing creation actions: https://docs.opensea.io/reference/create_listing_actions", "Tether, Supported Protocols and Integration Guidelines: https://tether.to/en/supported-protocols/", "Tether, FAQs: https://tether.to/faqs/", "Circle, 4 Ways to Authorize USDC Smart Contract Interactions, 2025-09-04: https://www.circle.com/blog/four-ways-to-authorize-usdc-smart-contract-interactions-with-circle-sdk", "EIP-3009, Transfer With Authorization: https://eips.ethereum.org/EIPS/eip-3009", "Coinbase Developer Documentation, x402 Overview: https://docs.cdp.coinbase.com/x402/welcome", "x402 Documentation, How x402 Works: https://docs.x402.org/core-concepts/how-x402-works", "Zelin Li, Qin Wang, Zhipeng Wang, Five Attacks on x402 Agentic Payment Protocol, 2026-05-12: https://arxiv.org/abs/2605.11781", "Ledger Support, Understanding Ethereum Token Approvals: https://support.ledger.com/article/Ethereum-Token-Approvals-Explained", "MetaMask Help Center, What is a token approval?: https://support.metamask.io/stay-safe/safety-in-web3/what-is-a-token-approval/", "Chainalysis, Targeted Approval Phishing Scams See Explosive Growth Over Last Two Years, 2023-12-14: https://www.chainalysis.com/blog/approval-phishing-cryptocurrency-scams-2023/", "Chainalysis, Approval Phishing: From Just One Case to Full-Scale Disruption, 2026-06-17: https://www.chainalysis.com/blog/what-is-approval-phishing/", "Scam Sniffer Reports archive, 2024 and 2025 wallet drainer annual loss estimates: https://drops.scamsniffer.io/category/reports/", "Chainalysis, $2.2 Billion Stolen from Crypto Platforms in 2024, 2024-12-19: https://www.chainalysis.com/blog/crypto-hacking-stolen-funds-2025/", "Chainalysis, 2025 Crypto Crime Mid-year Update, 2025-07-17: https://www.chainalysis.com/blog/2025-crypto-crime-mid-year-update/", "TRM Labs, $2.2 billion was stolen in crypto-related hacks in 2024, 2025-03-17: https://www.trmlabs.com/resources/blog/category-deep-dive-2-2-billion-was-stolen-in-crypto-related-hacks-in-2024"] },
     ],
   },
 ];
@@ -389,10 +414,11 @@ const copyByLanguage: Record<"zh" | "en", WhitepaperCopy> = {
     currentLanguage: "中文",
     otherLanguage: "English",
     otherLanguageHref: "/en/whitepaper",
-    title: "1Do 协议白皮书",
+    label: "1Do 白皮书",
+    title: "新一代链上账户与应用运行平台",
     intro:
-      "从宏观账户愿景出发，解释 EOA 与当前 DeFi 的授权模型，再介绍 1Do 如何把账户、DeFi、支付、gas 成本与交互流程收敛到用户自己的 wallet runtime。",
-    tags: ["中文", "宏观愿景", "EOA / DeFi", "ERC-7702"],
+      "1Do 从现有 EOA 与 DeFi 授权模型出发，提出以用户地址为应用执行边界的钱包运行时，让 DeFi、支付、NFT、遗产、会话和未来应用围绕同一个链上账户运行。",
+    tags: ["中文", "Onchain Account", "Runtime Apps", "ERC-7702"],
     sections: zhSections,
   },
   en: {
@@ -401,15 +427,140 @@ const copyByLanguage: Record<"zh" | "en", WhitepaperCopy> = {
     currentLanguage: "English",
     otherLanguage: "中文",
     otherLanguageHref: "/zh/whitepaper",
+    label: "1Do Whitepaper",
     title: "1Do Protocol Whitepaper",
     intro:
-      "A top-down explanation of the account vision, today's EOA and DeFi permission model, and how 1Do brings accounts, DeFi, payments, gas cost, and user flows back into the wallet runtime.",
-    tags: ["English", "Macro Vision", "EOA / DeFi", "ERC-7702"],
+      "A top-down explanation of the account vision, today's EOA and DeFi permission model, and how 1Do Core, runtime, security boundaries, payments, gas cost, and user flows converge inside the user's wallet runtime.",
+    tags: ["English", "Core", "Security Model", "ERC-7702"],
     sections: enSections,
   },
 };
 
+type DiagramNodeProps = {
+  eyebrow: string;
+  title: string;
+  lines: readonly string[];
+  tone?: "user" | "intent" | "external" | "state" | "result";
+};
+
+const diagramCopy = {
+  zh: {
+    traditionalTitle: "传统 DeFi：状态与权限外置",
+    onedoTitle: "1Do：用户地址就是状态和运行时",
+    arrows: {
+      external: "approve / deposit / execute",
+      runtime: "executeRuntimeApp(app, data)",
+      delegate: "delegatecall",
+    },
+    traditional: {
+      user: { eyebrow: "用户账户", title: "EOA", lines: ["签名", "无本地运行时"] },
+      external: { eyebrow: "外部协议", title: "DeFi Contracts", lines: ["allowance / operator", "pool / vault / order"] },
+      result: { eyebrow: "状态归属", title: "协议中心", lines: ["用户是入口", "状态在外部合约"] },
+    },
+    onedo: {
+      user: { eyebrow: "用户账户", title: "ERC-7702 Runtime", lines: ["持有资产", "执行代码", "保存状态"] },
+      app: { eyebrow: "应用逻辑", title: "Runtime App", lines: ["delegatecall", "进入用户执行帧"] },
+      result: { eyebrow: "状态归属", title: "用户地址中心", lines: ["应用是逻辑", "状态在用户地址"] },
+      state: { eyebrow: "状态层", title: "Storage", lines: ["ERC-7201 持久状态", "EIP-1153 临时拉取"] },
+    },
+  },
+  en: {
+    traditionalTitle: "Traditional DeFi: State And Authority Outside The User",
+    onedoTitle: "1Do: The User Address Is State And Runtime",
+    arrows: {
+      external: "approve / deposit / execute",
+      runtime: "executeRuntimeApp(app, data)",
+      delegate: "delegatecall",
+    },
+    traditional: {
+      user: { eyebrow: "User Account", title: "EOA", lines: ["signer", "no local runtime"] },
+      external: { eyebrow: "External Protocols", title: "DeFi Contracts", lines: ["allowance / operator", "pool / vault / order"] },
+      result: { eyebrow: "State Owner", title: "Protocol-Centered", lines: ["user is the entry", "state lives outside"] },
+    },
+    onedo: {
+      user: { eyebrow: "User Account", title: "ERC-7702 Runtime", lines: ["holds assets", "executes code", "stores state"] },
+      app: { eyebrow: "App Logic", title: "Runtime App", lines: ["delegatecall", "user-account frame"] },
+      result: { eyebrow: "State Owner", title: "User-Address Centered", lines: ["apps are logic", "state stays with user"] },
+      state: { eyebrow: "State Layer", title: "Storage", lines: ["ERC-7201 persistent state", "EIP-1153 transient pull"] },
+    },
+  },
+} as const;
+
+function DiagramNode({ eyebrow, title, lines, tone = "state" }: DiagramNodeProps) {
+  const toneClass = {
+    user: "border-pink-300/80 bg-pink-50/80",
+    intent: "border-amber-300/80 bg-amber-50/80",
+    external: "border-slate-300/80 bg-slate-50/85",
+    state: "border-indigo-300/80 bg-indigo-50/80",
+    result: "border-emerald-300/80 bg-emerald-50/80",
+  }[tone];
+
+  return (
+    <div className={`min-h-[108px] rounded-lg border px-4 py-3 shadow-[0_18px_40px_-32px_rgba(0,0,0,0.45)] ${toneClass}`}>
+      <p className="text-[11px] font-semibold uppercase text-[#1B0D15]/45">{eyebrow}</p>
+      <p className="mt-1 text-base font-semibold text-[#1B0D15]">{title}</p>
+      <ul className="mt-2 space-y-1 text-sm leading-5 text-[#1B0D15]/70">
+        {lines.map((line) => (
+          <li key={line}>{line}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function DiagramArrow({ label }: { label?: string }) {
+  return (
+    <div className="flex min-h-8 items-center justify-center text-[#1B0D15]/45">
+      <div className="hidden h-px flex-1 bg-[#1B0D15]/20 md:block" />
+      {label ? <span className="mx-2 rounded-full bg-white/70 px-2 py-1 text-[11px] font-medium text-[#1B0D15]/60">{label}</span> : null}
+      <span className="material-symbols-outlined !text-[22px]">arrow_forward</span>
+      <div className="hidden h-px flex-1 bg-[#1B0D15]/20 md:block" />
+    </div>
+  );
+}
+
+function StateDiagram({ variant, language }: { variant: "traditional" | "onedo"; language: "zh" | "en" }) {
+  const copy = diagramCopy[language];
+
+  if (variant === "traditional") {
+    const diagram = copy.traditional;
+    return (
+      <div className="rounded-2xl border border-white/75 bg-white/55 p-4 shadow-[0_24px_70px_-50px_rgba(0,0,0,0.65)] backdrop-blur">
+        <p className="mb-4 text-sm font-semibold text-[#1B0D15]/70">{copy.traditionalTitle}</p>
+        <div className="grid gap-3 md:grid-cols-[1fr_auto_1fr_auto_1fr]">
+          <DiagramNode {...diagram.user} tone="user" />
+          <DiagramArrow label={copy.arrows.external} />
+          <DiagramNode {...diagram.external} tone="external" />
+          <DiagramArrow />
+          <DiagramNode {...diagram.result} tone="result" />
+        </div>
+      </div>
+    );
+  }
+
+  const diagram = copy.onedo;
+  return (
+    <div className="rounded-2xl border border-white/75 bg-white/55 p-4 shadow-[0_24px_70px_-50px_rgba(0,0,0,0.65)] backdrop-blur">
+      <p className="mb-4 text-sm font-semibold text-[#1B0D15]/70">{copy.onedoTitle}</p>
+      <div className="grid gap-3 md:grid-cols-[1fr_auto_1fr_auto_1fr]">
+        <DiagramNode {...diagram.user} tone="user" />
+        <DiagramArrow label={copy.arrows.runtime} />
+        <DiagramNode {...diagram.app} tone="intent" />
+        <DiagramArrow label={copy.arrows.delegate} />
+        <DiagramNode {...diagram.result} tone="result" />
+      </div>
+      <div className="mt-3">
+        <DiagramNode {...diagram.state} tone="state" />
+      </div>
+    </div>
+  );
+}
+
 function renderBlock(block: WhitepaperBlock) {
+  if (block.type === "subheading") {
+    return <h3 className="pt-2 text-xl font-semibold tracking-tight text-[#1B0D15]">{block.text}</h3>;
+  }
+
   if (block.type === "paragraph") {
     return <p className="text-[15px] sm:text-base leading-8 text-[#1B0D15]/78">{block.text}</p>;
   }
@@ -420,6 +571,10 @@ function renderBlock(block: WhitepaperBlock) {
         <code>{block.text}</code>
       </pre>
     );
+  }
+
+  if (block.type === "diagram") {
+    return <StateDiagram variant={block.variant} language={block.language} />;
   }
 
   const ListTag = block.type === "ordered" ? "ol" : "ul";
@@ -469,7 +624,7 @@ export function WhitepaperContent({ language }: { language: "zh" | "en" }) {
             <article className="rounded-[2.4rem] border border-white/75 bg-white/72 px-5 py-7 shadow-[0_24px_70px_-44px_rgba(30,27,75,0.55)] backdrop-blur-3xl sm:px-9 sm:py-10">
               <header className="border-b border-[#1B0D15]/10 pb-8">
                 <span className="inline-flex items-center rounded-full border border-white/80 bg-white/70 px-3 py-1 text-xs font-mono uppercase tracking-widest text-[#1B0D15]/66">
-                  Whitepaper
+                  {copy.label}
                 </span>
                 <h1 className="mt-5 max-w-3xl text-4xl font-semibold leading-tight tracking-tight text-[#1B0D15] sm:text-6xl">
                   {copy.title}

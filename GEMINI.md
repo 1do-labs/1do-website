@@ -1,6 +1,6 @@
 # 1Do Website (`1do-website`)
 
-Official landing page for the 1Do 1Do Account ecosystem, linking to the 1Do App, Store, and Labs.
+Official landing page for the 1Do Account ecosystem, linking to the 1Do App / Core, Labs, and whitepaper.
 
 ## Project Overview
 
@@ -31,7 +31,7 @@ npm install
 
 ### Directory Structure
 - `src/app/`: Next.js App Router source.
-  - `page.tsx`: The main landing page containing all sections (Hero, Highlights, Steps, Store, Labs).
+  - `page.tsx`: The main landing page containing all sections (Hero, Highlights, Steps, Core Apps, Labs).
   - `globals.css`: Defines CSS variables (`--brand-*`), font faces, and utility classes like `.frosted-glass`.
   - `layout.tsx`: Root layout.
 - `public/`: Static assets including fonts (`fonts/`) and icons.
@@ -46,7 +46,7 @@ The project uses a specific design language defined in `src/app/globals.css`:
 - **Background:** An animated background with floating blobs is implemented in `page.tsx` using `.background-container` and `.shape*` classes.
 
 ### Content Management
-- **Links:** External links (App, Store, Labs) are managed in the `LINKS` constant at the top of `src/app/page.tsx`.
+- **Links:** External links (App / Core, Labs, Docs) are managed in the `LINKS` constant at the top of `src/app/page.tsx`.
 - **Text:** Content is static within `page.tsx`, designed to reflect the capabilities of the underlying 1Do ecosystem (1Do Account, deployments, SDK).
 
 ## Important Files

@@ -3,8 +3,6 @@ import React from "react";
 const LINKS = {
   home: "/",
   app: "https://app.1do.io",
-  store: "https://store.1do.io/en/apps",
-  storeDex: "https://store.1do.io/en/apps/dex",
   appFaucet: "https://app.1do.io/faucet",
   appRedPacket: "https://app.1do.io/redpacket",
   appDex: "https://app.1do.io/dex",
@@ -35,18 +33,18 @@ const STEPS = [
   {
     id: "03",
     icon: "apps",
-    title: "在 Store 启用 Dex",
-    desc: "在 Store 中为当前地址启用 Dex。完成后，Dex 才会在你的 1Do 钱包 runtime 中出现并可用。",
+    title: "在 1Do Core 打开 Dex",
+    desc: "Dex 已合并到 1Do Core。使用当前地址进入 Dex，即可通过你的 1Do 钱包 runtime 运行。",
     links: [
-      { label: "打开 Store", href: LINKS.store },
-      { label: "启用 Dex", href: LINKS.storeDex },
+      { label: "打开 1Do Core", href: LINKS.app },
+      { label: "打开 Dex", href: LINKS.appDex },
     ],
   },
   {
     id: "04",
     icon: "rocket_launch",
-    title: "钱包内置 / Store 启用应用",
-    desc: "Red Packet 是钱包内置功能；Dex、NFT Market、Flash Loan、Will、Session Pay 是 Store 启用后通过 runtime 运行的 app。",
+    title: "钱包内置 / Core runtime 应用",
+    desc: "Red Packet 是钱包内置功能；Dex、NFT Market、Flash Loan、Will、Session Pay 已合并到 Core，通过 runtime 运行。",
     links: [
       { label: "Red Packet（钱包内置）", href: LINKS.appRedPacket },
       { label: "Dex（已启用应用）", href: LINKS.appDex },
@@ -61,7 +59,7 @@ const FAQ = [
     a: "确认当前网络是 Sepolia（11155111），并重新连接钱包后再试。激活入口只会在尚未启用 1Do runtime 的地址上出现。",
   },
   {
-    q: "Faucet 或 Store 启用失败",
+    q: "Faucet 或 runtime app 打开失败",
     a: "通常是网络不对或 gas 不足。请先确认 Sepolia 网络，并确保钱包里有少量测试 ETH。",
   },
   {
@@ -104,7 +102,7 @@ export default function ChineseGuidePage() {
               1Do 官网中文指导
             </h1>
             <p className="mt-2 text-sm text-[#1B0D15]/65">
-              官网路径：`/guide/zh`。从连接钱包、激活 1Do runtime，到 Store 启用 Dex，再到打开运行在账户内的应用，按步骤完成即可。
+              官网路径：`/guide/zh`。从连接钱包、激活 1Do runtime，到在 1Do Core 打开 Dex，再到使用运行在账户内的应用，按步骤完成即可。
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
               <a
@@ -116,12 +114,12 @@ export default function ChineseGuidePage() {
                 打开 1Do
               </a>
               <a
-                href={LINKS.store}
+                href={LINKS.app}
                 target="_blank"
                 rel="noreferrer"
                 className="px-4 py-2 rounded-full bg-white/70 border border-white/70 text-[#1B0D15] text-sm font-medium hover:bg-white transition-colors"
               >
-                打开 Store
+                打开 1Do Core
               </a>
             </div>
           </section>
@@ -167,18 +165,18 @@ export default function ChineseGuidePage() {
 
             <div className="lg:col-span-4 space-y-6">
               <div className="bg-[linear-gradient(145deg,#120a0f,#22131c)] text-white rounded-[2rem] p-5 sm:p-6 border border-white/10 shadow-[0_30px_60px_-35px_rgba(0,0,0,0.6)]">
-                <h3 className="text-base font-semibold">应用类型：钱包内置 / Store 启用</h3>
-                <p className="mt-1 text-xs text-white/70">运行在以太坊 Sepolia 测试网。钱包内置能力默认可用，Store 启用应用通过 1Do runtime 运行。</p>
+                <h3 className="text-base font-semibold">应用类型：钱包内置 / Core runtime</h3>
+                <p className="mt-1 text-xs text-white/70">运行在以太坊 Sepolia 测试网。钱包内置能力默认可用，runtime app 通过 1Do Core 运行。</p>
                 <div className="mt-4 space-y-3">
                   <div className="rounded-2xl bg-white/10 border border-white/10 p-3">
                     <p className="text-xs uppercase tracking-widest text-white/60">钱包内置</p>
                     <p className="mt-1 text-sm font-medium">Red Packet</p>
-                    <p className="mt-1 text-xs text-white/70">默认可用，属于 1Do 钱包内置路径，无需先在 Store 启用。</p>
+                    <p className="mt-1 text-xs text-white/70">默认可用，属于 1Do 钱包内置路径，无需额外启用。</p>
                   </div>
                   <div className="rounded-2xl bg-white/10 border border-white/10 p-3">
-                    <p className="text-xs uppercase tracking-widest text-white/60">Store 启用</p>
+                    <p className="text-xs uppercase tracking-widest text-white/60">Core runtime</p>
                     <p className="mt-1 text-sm font-medium">Dex / NFT Market / Flash Loan / Will / Session Pay</p>
-                    <p className="mt-1 text-xs text-white/70">需先在 Store 启用，随后在你的 1Do 钱包中可用。</p>
+                    <p className="mt-1 text-xs text-white/70">直接从 1Do Core 打开，并在你的 1Do 钱包 runtime 中运行。</p>
                   </div>
                 </div>
               </div>

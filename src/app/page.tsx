@@ -10,9 +10,6 @@ const LINKS = {
   appFlashLoan: "https://app.1do.io/flashloan",
   appWill: "https://app.1do.io/will",
   appSessionPay: "https://app.1do.io/sessionpay",
-  store: "https://store.1do.io",
-  storeApps: "https://store.1do.io/en/apps",
-  storeDex: "https://store.1do.io/en/apps/dex",
   chineseGuide: "/guide/zh",
   whitepaper: "/zh/whitepaper",
   whitepaperEn: "/en/whitepaper",
@@ -37,7 +34,7 @@ const BEGINNER_STEPS = [
     id: "01",
     icon: "download",
     title: "Download 1Do Wallet",
-    desc: "Open 1Do Wallet and create or connect your account. The wallet is the entry point for Runtime, Store, and wallet-native apps.",
+    desc: "Open 1Do Wallet and create or connect your account. The wallet is the entry point for Core, Runtime, and wallet-native apps.",
     links: [{ label: "Download Wallet", href: LINKS.app }],
   },
   {
@@ -53,18 +50,18 @@ const BEGINNER_STEPS = [
   {
     id: "03",
     icon: "apps",
-    title: "Discover Apps in Store",
-    desc: "Use 1Do Store to discover runtime apps for your smart account. Enable Dex when you want it available inside 1Do.",
+    title: "Open Runtime Apps in Core",
+    desc: "Use 1Do Core to access runtime apps for your smart account. Open Dex when you want to trade inside 1Do.",
     links: [
-      { label: "Open Store", href: LINKS.storeApps },
-      { label: "Enable Dex", href: LINKS.storeDex },
+      { label: "Open 1Do Core", href: LINKS.app },
+      { label: "Open Dex", href: LINKS.appDex },
     ],
   },
   {
     id: "04",
     icon: "rocket_launch",
     title: "Launch Wallet Apps",
-    desc: "Run wallet-native apps such as Red Packet directly in 1Do, or open Store-enabled runtime apps such as Dex after enablement.",
+    desc: "Run wallet-native apps such as Red Packet directly in 1Do, or open Core runtime apps such as Dex from the same account.",
     links: [
       { label: "Red Packet (Wallet-native)", href: LINKS.appRedPacket },
       { label: "Dex (Enabled app)", href: LINKS.appDex },
@@ -104,8 +101,8 @@ const TROUBLESHOOTING = [
     a: "Reconnect your wallet and make sure your network is Sepolia before activating the 1Do runtime in the wallet extension.",
   },
   {
-    q: "Faucet or Store enablement failed",
-    a: "Check Sepolia gas first, then retry the faucet claim or Store app enablement.",
+    q: "Faucet or runtime app failed",
+    a: "Check Sepolia gas first, then retry the faucet claim or open the runtime app again.",
   },
   {
     q: "Dex not visible after enablement",
@@ -158,7 +155,7 @@ export default function Home() {
               <span className="block type-kicker text-pink-600">
                 WEB3 ACCOUNT RUNTIME
                 <br />
-                & DAPP STORE
+                & CORE APPS
               </span>
             </div>
             
@@ -197,8 +194,8 @@ export default function Home() {
         <section className="px-4 sm:px-10 mt-10">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 auto-rows-min">
             
-            {/* 1. 1DO STORE (7列) */}
-            <div id="store" className="md:col-span-7 frosted-glass rounded-[3rem] p-8 sm:p-12 min-h-[420px] flex flex-col group relative overflow-hidden card-hover-effect">
+            {/* 1. 1DO CORE APPS (7列) */}
+            <div id="core-apps" className="md:col-span-7 frosted-glass rounded-[3rem] p-8 sm:p-12 min-h-[420px] flex flex-col group relative overflow-hidden card-hover-effect">
                <div className="relative z-10 flex-1 flex flex-col">
                  <div className="flex items-center gap-4 mb-8">
                     <div className="w-14 h-14 rounded-2xl bg-white/60 border border-white/40 flex items-center justify-center shadow-sm">
@@ -206,7 +203,7 @@ export default function Home() {
                     </div>
                     <div>
                        <span className="block type-kicker text-[#1B0D15]/42">Ecosystem</span>
-                       <span className="type-caption font-medium text-[#1B0D15]/70">1Do Store</span>
+                       <span className="type-caption font-medium text-[#1B0D15]/70">1Do Core Apps</span>
                     </div>
                  </div>
                  
@@ -220,7 +217,7 @@ export default function Home() {
                   {APPS.map((app) => (
                     <a 
                       key={app.name} 
-                      href={LINKS.store} 
+                      href={LINKS.app} 
                       target="_blank" 
                       rel="noreferrer"
                       className="flex items-center gap-2 bg-white/60 backdrop-blur-md px-4 py-2.5 rounded-full border border-white/50 hover:bg-white hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer"
@@ -350,7 +347,7 @@ export default function Home() {
                     Start With 1Do Wallet
                   </h2>
                   <p className="mt-3 type-body text-[#1B0D15]/65 max-w-3xl">
-                    Download the wallet, fund your test account, discover apps in Store, then launch wallet-native and Store-enabled apps from one account.
+                    Download the wallet, fund your test account, then launch wallet-native and Core runtime apps from one account.
                   </p>
                 </div>
 
@@ -364,12 +361,12 @@ export default function Home() {
                     Download Wallet
                   </a>
                   <a
-                    href={LINKS.store}
+                    href={LINKS.app}
                     target="_blank"
                     rel="noreferrer"
                     className="px-4 py-2 rounded-full bg-white/70 border border-white/70 text-[#1B0D15] type-caption font-medium hover:bg-white transition-colors"
                   >
-                    Open Store
+                    Open 1Do Core
                   </a>
                   <a
                     href={LINKS.chineseGuide}
@@ -428,18 +425,18 @@ export default function Home() {
                 <div className="lg:col-span-4 space-y-4">
                   <div className="bg-[linear-gradient(145deg,#120a0f,#22131c)] text-white rounded-[2rem] p-5 sm:p-6 border border-white/10 shadow-[0_30px_60px_-35px_rgba(0,0,0,0.6)]">
                     <h3 className="text-base leading-snug font-semibold">App Types: Wallet-native / Runtime Apps</h3>
-                    <p className="mt-2 type-caption text-white/70">Runs on Ethereum Sepolia testnet. Wallet-native capabilities are built in; Store-enabled apps run through Runtime.</p>
+                    <p className="mt-2 type-caption text-white/70">Runs on Ethereum Sepolia testnet. Wallet-native capabilities are built in; runtime apps run through 1Do Core.</p>
 
                     <div className="mt-4 space-y-3">
                       <div className="rounded-2xl bg-white/10 border border-white/10 p-3">
                         <p className="type-kicker text-white/60">Wallet-native</p>
                         <p className="mt-1 type-caption font-medium text-white">Red Packet (Runtime)</p>
-                        <p className="mt-1 type-caption text-white/70">Available by default inside 1Do, no Store enablement required.</p>
+                        <p className="mt-1 type-caption text-white/70">Available by default inside 1Do, no separate enablement required.</p>
                       </div>
                       <div className="rounded-2xl bg-white/10 border border-white/10 p-3">
-                        <p className="type-kicker text-white/60">Store-enabled</p>
+                        <p className="type-kicker text-white/60">Core runtime</p>
                         <p className="mt-1 type-caption font-medium text-white">Dex / NFT Market / Flash Loan / Will / Session Pay</p>
-                        <p className="mt-1 type-caption text-white/70">Enable in Store first, then it appears inside 1Do.</p>
+                        <p className="mt-1 type-caption text-white/70">Open directly from 1Do Core with the same runtime account.</p>
                       </div>
                     </div>
                   </div>
