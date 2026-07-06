@@ -2,9 +2,13 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.1do.io"),
   title: "1Do",
   description:
     "1Do is a smart account runtime for activating once and doing payments, trades, and apps from one wallet.",
+  alternates: {
+    canonical: "/",
+  },
 };
 
 export const viewport: Viewport = {
