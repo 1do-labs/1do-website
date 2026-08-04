@@ -169,7 +169,7 @@ const approvalGasData = {
 
 const paymentGasData = {
   eip3009: { count: 148_480, median: 81_053, p05: 81_009, p95: 102_909, color: "#2775ca" },
-  erc8112: { low: 51_975, high: 86_187, color: "#10b981" },
+  erc8112: { low: 51_975, high: 86_187, median: 69_081, color: "#10b981" },
 } as const;
 
 const zhSections: WhitepaperSection[] = [
@@ -255,6 +255,9 @@ const zhSections: WhitepaperSection[] = [
       { type: "code", text: erc8112Interface },
       { type: "code", text: erc8114Interface },
       { type: "list", items: ["ERC-8112：标准定义钱包级 ERC-20 签名转移；1Do 扩展支持以 asset == address(0) 表示原生资产。tokenTransferWithSig 校验 EIP-712 + ERC-1271 后完成转账。", "ERC-8114：NFT 的签名转移放在钱包层，nftTransferWithSig 验签后执行 safeTransferFrom。", "x402 可以作为 HTTP 接入方式：一次性 ERC-20 付款可映射到 ERC-8112。"] },
+      { type: "subheading", text: "Session Pay：有界的持续支付" },
+      { type: "paragraph", text: "一次性签名转移适合单笔付款，但 Agent、API、订阅和高频小额结算需要在不反复唤起钱包的同时保持明确边界。Session Pay 让钱包先签署一份会话授权，固定 session key、收款方、资产、累计支出上限和到期时间；随后由 session key 对递增的累计付款额签名，任何中继者都可以提交结算。" },
+      { type: "list", items: ["一次钱包授权：SessionGrant 绑定 session key、payee、token、spendLimit、sessionExpiresAt 与 salt。", "按差额结算：SettlementAuthorization 签署 newTotalPaid，合约只支付它与链上 totalPaid 的差额，旧签名不能重复扣款。", "边界始终有效：累计付款不能倒退或超过上限；会话过期或被用户主动撤销后，后续结算失败。", "支持原生资产与 ERC-20，可用于 x402 Agent 支付、API 计费、订阅和其他需要多次小额结算的场景。"] },
     ],
   },
   {
@@ -270,6 +273,9 @@ const zhSections: WhitepaperSection[] = [
       { type: "subheading", text: "NFT Market" },
       { type: "paragraph", text: "NFT Market 是面向 NFT 的链下签名订单簿，支持 NFT↔NFT 和 NFT↔Token 的撮合。订单在链下表达交易双方的资产、数量、有效期和其他条件；匹配成功后，在一笔交易中从双方钱包完成结算。NFT 和支付资产在成交前始终留在各自账户中。" },
       { type: "list", items: ["相对传统 NFT 市场的常见首次授权路径：结算可围绕订单中的具体 NFT 和支付资产进行，不需要先对整个藏品做 setApprovalForAll。", "相对长期 operator 授权：NFT 拉取绑定目标合约、NFT 合约和 tokenId，市场不能取得可复用的整套藏品转移权。", "相对 NFT↔Token 市场：同一订单簿也可表达 NFT↔NFT 的直接交换，不必先把 NFT 换成代币再完成另一笔购买。", "相对托管市场：订单、匹配和成交状态由市场应用处理，但双方资产不需要预先存入平台。"] },
+      { type: "subheading", text: "Session Pay" },
+      { type: "paragraph", text: "Session Pay 是面向 Agent、API 和订阅的会话式支付应用。用户只需用钱包签署一次有上限、有收款方和有效期的 SessionGrant；会话期间，session key 可以生成累计结算授权，由网站、Agent 或中继者提交，钱包无需为每笔小额付款重复弹出签名确认。" },
+      { type: "list", items: ["相对无限 allowance：权限只适用于指定收款方、资产、累计额度和有效期。", "相对逐笔钱包签名：后续付款由独立 session key 授权，钱包所有者不必参与每次结算。", "相对预充值账户：资金继续留在用户钱包中，只有有效授权被结算时才转给收款方。", "相对简单自动扣款：链上记录累计已付金额，超限、过期、倒退累计值和已撤销会话都会失败。"] },
       { type: "subheading", text: "遗产" },
       { type: "paragraph", text: "Will 让用户在链下签署一份 ETH / ERC-20 加权遗嘱计划。计划包含受益人、权重、执行费、到期时间和触发方式；满足时间或失活条件后，任意执行者都可以提交计划，并把一个或多个尚未处理的资产直接分发给受益人。" },
       { type: "list", items: ["相对传统实体遗嘱或托管方案：资产在触发前继续留在用户账户，不需要预先迁移给平台、律师、多签或遗产合约。", "相对人工执行：受益人、权重、触发条件和执行费用由 EIP-712 签名计划固定，执行者不能自行改写分配规则。", "相对简单时间锁：Will 可以使用时间触发，也可以结合心跳失活与宽限期，更贴近“用户活跃时继续自管、失联后才执行”的需求。", "相对一次性全量分配：同一版本计划可以在多次交易中处理不同资产；已处理资产被记录，避免重复分发。重置计划会递增版本并使旧签名失效。"] },
@@ -298,7 +304,7 @@ const zhSections: WhitepaperSection[] = [
       { type: "paragraph", text: "用户可以通过 disableApp 撤销本地应用启用状态；ERC-7702 EOA 也可以主动撤销或替换运行时代码。平台级注册表用于阻止未登记或已下线的应用继续执行。在实际部署中，注册表管理员、升级方式、紧急下线流程、审计记录和恢复方案需要公开，使用户能够判断平台门控的信任边界。" },
       { type: "paragraph", text: "1Do 不声称所有风险都会消失。更清晰的运行时边界可以减少长期授权、平台托管余额和应用自建权限系统带来的风险，但不能替代应用审计、用户判断和清晰的钱包签名展示。" },
       { type: "subheading", text: "费用与效率" },
-      { type: "paragraph", text: "1Do 优化的不是单个操作码，而是完整交互路径：减少 approve、平台存入、重复确认和长期授权残留。下面保留三类代表性费用基准；外部协议结算、approve 与 USDC 支付数据采用 2026 年上半年主网成功交易回执中位数，1Do DEX / NFT 展示本地完整交易中位数及范围，ERC-8112 展示本地完整回执范围。受复杂交易和高 Gas 长尾样本影响，本组外部协议结算样本的平均数比中位数高约 25%–74%，因此本文使用中位数描述典型主网交易成本。" },
+      { type: "paragraph", text: "1Do 优化的不是单个操作码，而是完整交互路径：减少 approve、平台存入、重复确认和长期授权残留。下面保留三类代表性费用基准；外部协议结算、approve 与 USDC 支付数据采用 2026 年上半年主网成功交易回执中位数，1Do DEX / NFT 与 ERC-8112 展示本地完整交易中位数及范围。受复杂交易和高 Gas 长尾样本影响，本组外部协议结算样本的平均数比中位数高约 25%–74%，因此本文使用中位数描述典型主网交易成本。" },
       { type: "gasEvidence", language: "zh" },
       { type: "subheading", text: "可扩展性" },
       { type: "paragraph", text: "1Do 的扩展性来自账户运行时和应用逻辑的分离：账户保持同一个地址和资产边界，应用作为可启用、可禁用、可发现的运行时逻辑进入账户执行帧。新应用不需要要求用户迁移资产，也不需要每个应用都重新建立一套长期授权系统。" },
@@ -312,6 +318,7 @@ const zhSections: WhitepaperSection[] = [
       { type: "paragraph", text: "1Do 不是要把钱包做成一个庞大的中心化应用框架，而是要把账户能力稳定地收敛到用户地址本身。" },
       { type: "paragraph", text: "宏观上，1Do 希望用户激活一次账户运行时，就能持续扩展 DeFi、支付、NFT、遗产与未来应用。" },
       { type: "paragraph", text: "工程基础采用既有标准：ERC-7702 提供 EOA 账户运行时能力，ERC-1271 与 EIP-712 用于合约账户签名和结构化意图，x402 作为 HTTP 支付接入方式，ERC-7201（钻石/命名空间存储）隔离账户与应用的持久状态。" },
+      { type: "paragraph", text: "在应用层，ERC-8112 处理一次性签名支付，Session Pay 则展示同一运行时如何承载有收款方、有资产、有累计上限、有期限且可撤销的持续支付会话，为 Agent、API 与订阅提供无需逐笔唤起钱包的结算方式。" },
       { type: "paragraph", text: "1Do 发起的 ERC 草案按四层形成完整体系：" },
       { type: "list", items: ["资产层：ERC-7196 / ERC-7561 定义面向合约钱包的简化代币与 NFT。", "钱包资产管理层：ERC-7204 / ERC-7564 定义钱包级代币与 NFT 管理；ERC-8064 / ERC-8067 增加链下签名 Permit。", "签名转移层：ERC-8112 / ERC-8114 定义钱包级 ERC-20 代币与 NFT 签名转移；1Do 在 ERC-8112 标准能力上扩展原生资产转移。", "运行时执行层：ERC-8280 定义应用宿主与本地启用接口；ERC-8284 / ERC-8285 定义单次执行窗口内、目标绑定的代币与 NFT 拉取。"] },
       { type: "paragraph", text: "这些草案分别处理资产表达、钱包级管理、签名授权、一次性转移和运行时执行，并把用户可理解的权限与结算边界收敛到钱包运行时。" },
@@ -411,6 +418,9 @@ const enSections: WhitepaperSection[] = [
       { type: "code", text: erc8112Interface },
       { type: "code", text: erc8114Interface },
       { type: "list", items: ["ERC-8112 standardizes signed ERC-20 transfer at the wallet layer; the 1Do extension also supports the native asset through asset == address(0). tokenTransferWithSig validates EIP-712 + ERC-1271 before transfer.", "ERC-8114 puts NFT transfer with signature at the wallet layer; nftTransferWithSig validates then calls safeTransferFrom.", "x402 can be an HTTP entry point: a one-off ERC-20 payment can map to ERC-8112."] },
+      { type: "subheading", text: "Session Pay: Bounded Recurring Payments" },
+      { type: "paragraph", text: "One-off signed transfers suit individual payments, while agents, APIs, subscriptions, and frequent micropayments need clear limits without reopening the wallet for every charge. Session Pay lets the wallet sign one session grant that fixes the session key, payee, asset, cumulative spend limit, and expiry. The session key then signs increasing cumulative payment totals, and any relayer can submit settlement." },
+      { type: "list", items: ["One wallet authorization: SessionGrant binds the session key, payee, token, spendLimit, sessionExpiresAt, and salt.", "Delta settlement: SettlementAuthorization signs newTotalPaid, and the contract pays only the difference from onchain totalPaid, so an old authorization cannot charge twice.", "Persistent bounds: the cumulative total cannot decrease or exceed the limit; settlement fails after expiry or user revocation.", "Native assets and ERC-20 tokens are supported for x402 agent payments, API billing, subscriptions, and other repeated micropayment flows."] },
     ],
   },
   {
@@ -426,6 +436,9 @@ const enSections: WhitepaperSection[] = [
       { type: "subheading", text: "NFT Market" },
       { type: "paragraph", text: "NFT Market is an offchain signed order book for NFT trading, supporting NFT-to-NFT and NFT-to-token matching. An order expresses the assets, quantities, expiry, and other terms offchain; when matched, both wallets settle in one transaction. NFTs and payment assets remain in their respective accounts before fulfillment." },
       { type: "list", items: ["Compared with common first-authorization flows in traditional NFT marketplaces: settlement can be scoped to the concrete NFT and payment asset in an order, without first granting setApprovalForAll over an entire collection.", "Compared with long-lived operator approval: NFT pull binds the target contract, NFT contract, and tokenId, so the market does not receive reusable authority to move an entire collection.", "Compared with NFT-to-token marketplaces: the same order book can express a direct NFT-to-NFT exchange, without first selling an NFT for tokens and then making a separate purchase.", "Compared with custodial marketplaces: the market app handles orders, matching, and fill state, while neither side needs to pre-deposit assets into a platform."] },
+      { type: "subheading", text: "Session Pay" },
+      { type: "paragraph", text: "Session Pay is a session-based payment app for agents, APIs, and subscriptions. The user signs one bounded SessionGrant with a fixed payee and expiry. During the session, a session key can produce cumulative settlement authorizations for a website, agent, or relayer to submit, without another wallet popup for every micropayment." },
+      { type: "list", items: ["Compared with unlimited allowance: authority is scoped to one payee, asset, cumulative limit, and validity period.", "Compared with signing every payment in the wallet: an independent session key authorizes later charges without involving the wallet owner each time.", "Compared with a prepaid platform balance: funds remain in the user's wallet and move only when a valid authorization is settled.", "Compared with simple automatic debit: the runtime records the cumulative amount paid, and rejects over-limit, expired, decreasing-total, or revoked sessions."] },
       { type: "subheading", text: "Will" },
       { type: "paragraph", text: "Will lets a user sign one weighted ETH / ERC-20 will plan offchain. The plan contains beneficiaries, weights, executor fee, expiry, and trigger mode; after a time or inactivity condition is satisfied, any executor can submit the plan and distribute one or more unprocessed assets directly to beneficiaries." },
       { type: "list", items: ["Compared with a traditional legal will or custody arrangement: assets remain in the user's account before the trigger, with no need to migrate them to a platform, lawyer, multisig, or inheritance contract first.", "Compared with manual execution: beneficiaries, weights, trigger conditions, and executor fee are fixed by an EIP-712 signed plan, so an executor cannot rewrite distribution rules.", "Compared with a simple timelock: Will can use a time trigger or combine heartbeat inactivity with a grace period, matching the need for self-custody while active and execution only after loss of activity.", "Compared with one-off full distribution: the same plan version can process different assets across several transactions; settled assets are recorded to prevent duplicate distribution. Resetting a plan increments its version and invalidates old signatures."] },
@@ -454,7 +467,7 @@ const enSections: WhitepaperSection[] = [
       { type: "paragraph", text: "A user can revoke local app enablement through disableApp, and an ERC-7702 EOA can revoke or replace its runtime code. The platform registry prevents unregistered or delisted apps from continuing to execute. In a production deployment, registry administrators, upgrade procedures, emergency delisting, audit records, and recovery paths need to be public so users can evaluate the trust boundary of platform-level gating." },
       { type: "paragraph", text: "1Do does not claim that all risk disappears. A clearer runtime boundary can reduce risks from long-lived approval, platform-custodied balances, and app-owned permission systems, but it does not replace app audits, user judgment, or clear wallet signing displays." },
       { type: "subheading", text: "Cost and Efficiency" },
-      { type: "paragraph", text: "1Do optimizes the complete interaction path rather than one opcode: fewer approvals, platform deposits, repeated confirmations, and persistent permissions. External-protocol settlement, approval, and USDC payment figures below use median successful H1 2026 mainnet receipts. 1Do DEX / NFT figures show local complete-transaction medians and ranges, while ERC-8112 shows a local complete-receipt range. Complex transactions and high-gas tails make the means in this external settlement sample about 25%–74% higher than the medians, so this whitepaper uses medians to represent typical mainnet cost." },
+      { type: "paragraph", text: "1Do optimizes the complete interaction path rather than one opcode: fewer approvals, platform deposits, repeated confirmations, and persistent permissions. External-protocol settlement, approval, and USDC payment figures below use median successful H1 2026 mainnet receipts. 1Do DEX / NFT and ERC-8112 figures show local complete-transaction medians and ranges. Complex transactions and high-gas tails make the means in this external settlement sample about 25%–74% higher than the medians, so this whitepaper uses medians to represent typical mainnet cost." },
       { type: "gasEvidence", language: "en" },
       { type: "subheading", text: "Scalability" },
       { type: "paragraph", text: "1Do scales by separating the account runtime from app logic: the user keeps the same address and asset boundary, while apps enter as enableable, disableable, discoverable runtime logic. New apps do not need users to migrate assets, and each app does not need to recreate a long-lived approval system." },
@@ -468,6 +481,7 @@ const enSections: WhitepaperSection[] = [
       { type: "paragraph", text: "1Do is not trying to turn wallets into a giant centralized app framework. It is trying to converge account capability onto the user's own address." },
       { type: "paragraph", text: "At the macro level, 1Do wants users to activate one account runtime and keep extending DeFi, payments, NFTs, wills, and future apps." },
       { type: "paragraph", text: "The engineering foundation uses existing standards: ERC-7702 provides EOA runtime capability; ERC-1271 and EIP-712 support contract-account signatures and typed intent; x402 is an HTTP payment entry point; and ERC-7201 (diamond / namespaced storage) isolates persistent account and app state." },
+      { type: "paragraph", text: "At the application layer, ERC-8112 handles one-off signed payments, while Session Pay shows how the same runtime can support recurring sessions bounded by payee, asset, cumulative limit, expiry, and user revocation, giving agents, APIs, and subscriptions a settlement path without reopening the wallet for every charge." },
       { type: "paragraph", text: "The ERC drafts initiated by 1Do form four layers:" },
       { type: "list", items: ["Asset layer: ERC-7196 / ERC-7561 define simplified tokens and NFTs for contract wallets.", "Wallet asset-management layer: ERC-7204 / ERC-7564 define wallet-level token and NFT management; ERC-8064 / ERC-8067 add offchain-signature Permit flows.", "Signed-transfer layer: ERC-8112 / ERC-8114 define wallet-level signed transfers for ERC-20 tokens and NFTs; 1Do extends ERC-8112 with native-asset transfer.", "Runtime execution layer: ERC-8280 defines the app host and local-enablement interface; ERC-8284 / ERC-8285 define target-bound token and NFT pulls within one execution window."] },
       { type: "paragraph", text: "Together, these drafts address asset representation, wallet-level management, signed authorization, one-time transfer, and runtime execution, converging user-readable authority and settlement at the wallet-runtime boundary." },
@@ -813,7 +827,7 @@ const gasEvidenceCopy = {
     payment: "授权支付",
     onedoMedian: "1Do 完整交易中位数",
     range: "范围",
-    localReceiptRange: "本地完整回执范围",
+    localReceiptMedian: "本地完整回执中位数",
     mainnetMedian: "主网回执中位数",
     settlementGas: "结算",
     approveGas: "approve",
@@ -831,7 +845,7 @@ const gasEvidenceCopy = {
     payment: "Authorization payment",
     onedoMedian: "1Do complete-transaction median",
     range: "range",
-    localReceiptRange: "local complete-receipt range",
+    localReceiptMedian: "local complete-receipt median",
     mainnetMedian: "Mainnet receipt median",
     settlementGas: "settlement",
     approveGas: "approve",
@@ -907,8 +921,9 @@ function GasEvidence({ language }: { language: "zh" | "en" }) {
 
         <div className="rounded-2xl border border-blue-200/60 bg-blue-50/55 p-4">
           <h4 className="font-semibold text-blue-950/80">{copy.payment}</h4>
-          <p className="mt-4 text-[11px] uppercase tracking-[0.12em] text-blue-950/45">1Do ERC-8112 · {copy.localReceiptRange}</p>
-          <p className="mt-1 font-mono text-xl font-semibold text-blue-950/75">{formatGas(paymentGasData.erc8112.low)}–{formatGas(paymentGasData.erc8112.high)}</p>
+          <p className="mt-4 text-[11px] uppercase tracking-[0.12em] text-blue-950/45">1Do ERC-8112 · {copy.localReceiptMedian}</p>
+          <p className="mt-1 font-mono text-xl font-semibold text-blue-950/75">{formatGas(paymentGasData.erc8112.median)}</p>
+          <p className="mt-1 text-[11px] text-blue-950/45">{copy.range} {formatGas(paymentGasData.erc8112.low)}–{formatGas(paymentGasData.erc8112.high)}</p>
           <div className="mt-4 border-t border-blue-950/10 pt-3 text-xs text-blue-950/62">
             <p className="flex justify-between gap-3"><span>{copy.eip3009Label} {copy.mainnetMedian}</span><span className="font-mono">{formatGas(paymentGasData.eip3009.median)}</span></p>
             <p className="mt-2 text-[11px] text-blue-950/45">P5–P95 {formatGas(paymentGasData.eip3009.p05)}–{formatGas(paymentGasData.eip3009.p95)} · {formatCount(paymentGasData.eip3009.count)} {copy.records}</p>
