@@ -255,9 +255,6 @@ const zhSections: WhitepaperSection[] = [
       { type: "code", text: erc8112Interface },
       { type: "code", text: erc8114Interface },
       { type: "list", items: ["ERC-8112：标准定义钱包级 ERC-20 签名转移；1Do 扩展支持以 asset == address(0) 表示原生资产。tokenTransferWithSig 校验 EIP-712 + ERC-1271 后完成转账。", "ERC-8114：NFT 的签名转移放在钱包层，nftTransferWithSig 验签后执行 safeTransferFrom。", "x402 可以作为 HTTP 接入方式：一次性 ERC-20 付款可映射到 ERC-8112。"] },
-      { type: "subheading", text: "Session Pay：有界的持续支付" },
-      { type: "paragraph", text: "一次性签名转移适合单笔付款，但 Agent、API、订阅和高频小额结算需要在不反复唤起钱包的同时保持明确边界。Session Pay 让钱包先签署一份会话授权，固定 session key、收款方、资产、累计支出上限和到期时间；随后由 session key 对递增的累计付款额签名，任何中继者都可以提交结算。" },
-      { type: "list", items: ["一次钱包授权：SessionGrant 绑定 session key、payee、token、spendLimit、sessionExpiresAt 与 salt。", "按差额结算：SettlementAuthorization 签署 newTotalPaid，合约只支付它与链上 totalPaid 的差额，旧签名不能重复扣款。", "边界始终有效：累计付款不能倒退或超过上限；会话过期或被用户主动撤销后，后续结算失败。", "支持原生资产与 ERC-20，可用于 x402 Agent 支付、API 计费、订阅和其他需要多次小额结算的场景。"] },
     ],
   },
   {
