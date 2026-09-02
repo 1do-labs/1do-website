@@ -2,7 +2,7 @@ import React from "react";
 import Image from "next/image";
 
 const LINKS = {
-  app: "https://app.1do.io",
+  app: "https://chromewebstore.google.com/detail/dmkogdklenidmiaancgkcaiceiidafba",
   appFaucet: "https://app.1do.io/faucet",
   appRedPacket: "https://app.1do.io/redpacket",
   appDex: "https://app.1do.io/dex",
