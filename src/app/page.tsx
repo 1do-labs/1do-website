@@ -2,7 +2,8 @@ import React from "react";
 import Image from "next/image";
 
 const LINKS = {
-  app: "https://chromewebstore.google.com/detail/dmkogdklenidmiaancgkcaiceiidafba",
+  app: "https://app.1do.io",
+  walletDownload: "https://chromewebstore.google.com/detail/dmkogdklenidmiaancgkcaiceiidafba",
   appFaucet: "https://app.1do.io/faucet",
   appRedPacket: "https://app.1do.io/redpacket",
   appDex: "https://app.1do.io/dex",
@@ -22,11 +23,11 @@ const LINKS = {
 };
 
 const APPS = [
-  { name: "Dex", icon: "/apps/dex.svg" },
-  { name: "NFT Market", icon: "/apps/nftmarket.svg" },
-  { name: "Flash Loan", icon: "/apps/flashloan.svg" },
-  { name: "Will", icon: "/apps/will.svg" },
-  { name: "Session Pay", icon: "/apps/sessionpay.svg" },
+  { name: "Dex", icon: "/apps/dex.svg", href: LINKS.appDex },
+  { name: "NFT Market", icon: "/apps/nftmarket.svg", href: LINKS.appNftMarket },
+  { name: "Flash Loan", icon: "/apps/flashloan.svg", href: LINKS.appFlashLoan },
+  { name: "Will", icon: "/apps/will.svg", href: LINKS.appWill },
+  { name: "Session Pay", icon: "/apps/sessionpay.svg", href: LINKS.appSessionPay },
 ];
 
 const BEGINNER_STEPS = [
@@ -35,7 +36,7 @@ const BEGINNER_STEPS = [
     icon: "download",
     title: "Download 1Do Wallet",
     desc: "Open 1Do Wallet and create or connect your account. The wallet is the entry point for Core, Runtime, and wallet-native apps.",
-    links: [{ label: "Download Wallet", href: LINKS.app }],
+    links: [{ label: "Download Wallet", href: LINKS.walletDownload }],
   },
   {
     id: "02",
@@ -217,7 +218,7 @@ export default function Home() {
                   {APPS.map((app) => (
                     <a 
                       key={app.name} 
-                      href={LINKS.app} 
+                      href={app.href}
                       target="_blank" 
                       rel="noreferrer"
                       className="flex items-center gap-2 bg-white/60 backdrop-blur-md px-4 py-2.5 rounded-full border border-white/50 hover:bg-white hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer"
@@ -252,7 +253,7 @@ export default function Home() {
                
                <div className="mt-auto w-full h-px bg-gradient-to-r from-indigo-900/10 to-transparent"></div>
                <a
-                 href={LINKS.app}
+                 href={LINKS.walletDownload}
                  target="_blank"
                  rel="noreferrer"
                  className="mt-6 inline-flex items-center gap-2 bg-white/60 backdrop-blur-md px-4 py-2.5 rounded-full border border-white/50 hover:bg-white hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer"
@@ -353,7 +354,7 @@ export default function Home() {
 
                 <div className="flex flex-wrap gap-2">
                   <a
-                    href={LINKS.app}
+                    href={LINKS.walletDownload}
                     target="_blank"
                     rel="noreferrer"
                     className="px-4 py-2 rounded-full bg-[#1B0D15] text-white type-caption font-medium hover:opacity-90 transition-opacity"
