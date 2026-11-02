@@ -10,6 +10,7 @@ const LINKS = {
   sepoliaFaucet: "https://sepoliafaucet.com/",
   faucetUsdcCode: "https://sepolia.etherscan.io/address/0x78e8421FB1cB038bc63BC7450504eBe75d7d4725#code",
   faucetUsdtCode: "https://sepolia.etherscan.io/address/0x15F758653dBD7E64e20ad0AddBb4d43d773d369E#code",
+  runtimeMcpGuide: "https://github.com/1do-labs/1do-core/blob/main/docs/runtime-mcp-getting-started.zh.md",
 };
 
 const STEPS = [
@@ -211,7 +212,7 @@ export default function ChineseGuidePage() {
                   Runtime MCP 为外部钱包 Agent 提供 Runtime 状态读取、ERC-7702 激活准备、EIP-712 签名数据准备与验证，以及 Runtime App 和 wallet-native 操作。MCP 不接收私钥，也不会替钱包自动签名。
                 </p>
               </div>
-              <a href="https://docs.1do.io" target="_blank" rel="noreferrer" className="inline-flex shrink-0 items-center gap-2 px-4 py-2 rounded-full bg-[#1B0D15] text-white text-sm font-medium hover:opacity-90 transition-opacity">
+                <a href={LINKS.runtimeMcpGuide} target="_blank" rel="noreferrer" className="inline-flex shrink-0 items-center gap-2 px-4 py-2 rounded-full bg-[#1B0D15] text-white text-sm font-medium hover:opacity-90 transition-opacity">
                 查看完整接入文档
                 <span className="material-symbols-outlined !text-base">open_in_new</span>
               </a>
@@ -236,9 +237,9 @@ export default function ChineseGuidePage() {
             </div>
 
             <div className="mt-4 rounded-2xl bg-[#1B0D15] text-white p-4 sm:p-5">
-              <p className="text-sm font-semibold">测试网领取测试资产不在 MCP 内</p>
+              <p className="text-sm font-semibold">通过 MCP 完成测试网资产准备</p>
               <p className="mt-1 text-xs text-white/70 leading-relaxed">
-                先从 Sepolia Faucet 领取 ETH，再从 1Do Faucet 领取 USDC、USDT、1DO 或 NFT。MCP 不提供 faucet、mint 或代签功能。
+                先从 Sepolia Faucet 领取测试 ETH，再通过 MCP 的 Faucet 工具领取固定额度的 USDC、USDT、1DO 或 NFT。MCP 不接收私钥，也不会替钱包签名。
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <a href={LINKS.sepoliaFaucet} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white text-[#1B0D15] text-xs font-medium hover:bg-white/85 transition-colors">
