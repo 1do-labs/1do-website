@@ -197,6 +197,61 @@ export default function ChineseGuidePage() {
               </div>
             </div>
           </section>
+
+          <section id="mcp" className="frosted-glass rounded-[2rem] p-5 sm:p-7 bg-white/60 border border-white/75 scroll-mt-24">
+            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5">
+              <div className="max-w-3xl">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-mono tracking-widest uppercase bg-indigo-100/80 text-indigo-900/75">
+                  Runtime MCP
+                </span>
+                <h2 className="mt-3 text-2xl sm:text-3xl font-semibold tracking-tight text-[#1B0D15]">
+                  让钱包 Agent 使用 1Do Runtime
+                </h2>
+                <p className="mt-2 text-sm text-[#1B0D15]/75 leading-relaxed">
+                  Runtime MCP 为外部钱包 Agent 提供 Runtime 状态读取、ERC-7702 激活准备、EIP-712 签名数据准备与验证，以及 Runtime App 和 wallet-native 操作。MCP 不接收私钥，也不会替钱包自动签名。
+                </p>
+              </div>
+              <a href="https://docs.1do.io" target="_blank" rel="noreferrer" className="inline-flex shrink-0 items-center gap-2 px-4 py-2 rounded-full bg-[#1B0D15] text-white text-sm font-medium hover:opacity-90 transition-opacity">
+                查看完整接入文档
+                <span className="material-symbols-outlined !text-base">open_in_new</span>
+              </a>
+            </div>
+
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="rounded-2xl bg-white/80 border border-white/90 p-4">
+                <p className="text-xs uppercase tracking-widest text-[#1B0D15]/50">1. 准备</p>
+                <p className="mt-2 text-sm font-semibold text-[#1B0D15]">连接钱包和 MCP</p>
+                <p className="mt-1 text-xs text-[#1B0D15]/70">本地 Agent 使用 stdio；云端 Agent 使用带 Bearer Key 的 Streamable HTTP。</p>
+              </div>
+              <div className="rounded-2xl bg-white/80 border border-white/90 p-4">
+                <p className="text-xs uppercase tracking-widest text-[#1B0D15]/50">2. 激活</p>
+                <p className="mt-2 text-sm font-semibold text-[#1B0D15]">检查 Runtime 并完成授权</p>
+                <p className="mt-1 text-xs text-[#1B0D15]/70">Agent 调用 status/prepare，钱包确认 ERC-7702 authorization 和应用启用。</p>
+              </div>
+              <div className="rounded-2xl bg-white/80 border border-white/90 p-4">
+                <p className="text-xs uppercase tracking-widest text-[#1B0D15]/50">3. 执行</p>
+                <p className="mt-2 text-sm font-semibold text-[#1B0D15]">准备、签名、提交、查询</p>
+                <p className="mt-1 text-xs text-[#1B0D15]/70">覆盖 Dex、NFT Market、Will、Session Pay、ERC-8112/8114 和 Pay。</p>
+              </div>
+            </div>
+
+            <div className="mt-4 rounded-2xl bg-[#1B0D15] text-white p-4 sm:p-5">
+              <p className="text-sm font-semibold">测试网领取测试资产不在 MCP 内</p>
+              <p className="mt-1 text-xs text-white/70 leading-relaxed">
+                先从 Sepolia Faucet 领取 ETH，再从 1Do Faucet 领取 USDC、USDT、1DO 或 NFT。MCP 不提供 faucet、mint 或代签功能。
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <a href={LINKS.sepoliaFaucet} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white text-[#1B0D15] text-xs font-medium hover:bg-white/85 transition-colors">
+                  Sepolia Faucet
+                  <span className="material-symbols-outlined !text-sm">open_in_new</span>
+                </a>
+                <a href={LINKS.appFaucet} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white/15 border border-white/20 text-white text-xs font-medium hover:bg-white/25 transition-colors">
+                  1Do Faucet
+                  <span className="material-symbols-outlined !text-sm">open_in_new</span>
+                </a>
+              </div>
+            </div>
+          </section>
         </div>
       </main>
     </div>
