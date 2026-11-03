@@ -10,7 +10,7 @@ const LINKS = {
   sepoliaFaucet: "https://sepoliafaucet.com/",
   faucetUsdcCode: "https://sepolia.etherscan.io/address/0x78e8421FB1cB038bc63BC7450504eBe75d7d4725#code",
   faucetUsdtCode: "https://sepolia.etherscan.io/address/0x15F758653dBD7E64e20ad0AddBb4d43d773d369E#code",
-  runtimeMcpGuide: "https://github.com/1do-labs/1do-core/blob/main/docs/runtime-mcp-getting-started.zh.md",
+  runtimeMcpGuide: "https://github.com/1do-labs/1do-core/blob/main/docs/runtime-mcp-agent-setup.zh.md",
 };
 
 const STEPS = [
