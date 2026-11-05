@@ -11,6 +11,8 @@ const LINKS = {
   faucetUsdcCode: "https://sepolia.etherscan.io/address/0x78e8421FB1cB038bc63BC7450504eBe75d7d4725#code",
   faucetUsdtCode: "https://sepolia.etherscan.io/address/0x15F758653dBD7E64e20ad0AddBb4d43d773d369E#code",
   runtimeMcpGuide: "https://github.com/1do-labs/1do-core/blob/main/docs/runtime-mcp-agent-setup.zh.md",
+  runtimeMcpConnect: "https://app.1do.io/mcp/connect",
+  runtimeMcpConnect: "https://app.1do.io/mcp/connect",
 };
 
 const STEPS = [
@@ -216,6 +218,8 @@ export default function ChineseGuidePage() {
                 查看完整接入文档
                 <span className="material-symbols-outlined !text-base">open_in_new</span>
               </a>
+                <a href={LINKS.runtimeMcpConnect} target="_blank" rel="noreferrer" className="inline-flex shrink-0 items-center gap-2 px-4 py-2 rounded-full border border-[#1B0D15]/20 text-[#1B0D15] text-sm font-medium hover:bg-white/70 transition-colors">连接钱包</a>
+                <a href={LINKS.runtimeMcpConnect} target="_blank" rel="noreferrer" className="inline-flex shrink-0 items-center gap-2 px-4 py-2 rounded-full border border-[#1B0D15]/20 text-[#1B0D15] text-sm font-medium hover:bg-white/70 transition-colors">连接钱包</a>
             </div>
 
             <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
