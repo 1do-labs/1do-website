@@ -219,7 +219,6 @@ export default function ChineseGuidePage() {
                 <span className="material-symbols-outlined !text-base">open_in_new</span>
               </a>
                 <a href={LINKS.runtimeMcpConnect} target="_blank" rel="noreferrer" className="inline-flex shrink-0 items-center gap-2 px-4 py-2 rounded-full border border-[#1B0D15]/20 text-[#1B0D15] text-sm font-medium hover:bg-white/70 transition-colors">连接钱包</a>
-                <a href={LINKS.runtimeMcpConnect} target="_blank" rel="noreferrer" className="inline-flex shrink-0 items-center gap-2 px-4 py-2 rounded-full border border-[#1B0D15]/20 text-[#1B0D15] text-sm font-medium hover:bg-white/70 transition-colors">连接钱包</a>
             </div>
 
             <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
