@@ -211,7 +211,7 @@ export default function ChineseGuidePage() {
                   让钱包 Agent 使用 1Do Runtime
                 </h2>
                 <p className="mt-2 text-sm text-[#1B0D15]/75 leading-relaxed">
-                  Runtime MCP 与钱包 MCP 配合使用：钱包 MCP 负责账户、签名、确认和广播，1Do Runtime MCP 负责 Runtime 状态、ERC-7702 准备、Faucet、Runtime App 和 Relayer。1Do Runtime MCP 不接收私钥。
+                  Runtime MCP 支持两种签名模式：本地 signer 由 MCP 使用测试钱包签名并广播；外部钱包模式由插件钱包确认、签名和广播。Agent 会通过 wallet.get_mode 自动判断当前模式。
                 </p>
               </div>
                 <a href={LINKS.runtimeMcpGuide} target="_blank" rel="noreferrer" className="inline-flex shrink-0 items-center gap-2 px-4 py-2 rounded-full bg-[#1B0D15] text-white text-sm font-medium hover:opacity-90 transition-opacity">
@@ -224,8 +224,8 @@ export default function ChineseGuidePage() {
             <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="rounded-2xl bg-white/80 border border-white/90 p-4">
                 <p className="text-xs uppercase tracking-widest text-[#1B0D15]/50">1. 准备</p>
-                <p className="mt-2 text-sm font-semibold text-[#1B0D15]">连接钱包和 MCP</p>
-                <p className="mt-1 text-xs text-[#1B0D15]/70">上层 Agent 同时连接钱包 MCP 和 1Do Runtime MCP；Runtime MCP 可使用本地 stdio 或带 Bearer Key 的 Streamable HTTP。</p>
+                <p className="mt-2 text-sm font-semibold text-[#1B0D15]">选择签名模式</p>
+                <p className="mt-1 text-xs text-[#1B0D15]/70">新手使用本地 signer 即可；连接插件钱包后，Runtime MCP 会返回待签名请求并继续广播。</p>
               </div>
               <div className="rounded-2xl bg-white/80 border border-white/90 p-4">
                 <p className="text-xs uppercase tracking-widest text-[#1B0D15]/50">2. 激活</p>
@@ -242,7 +242,7 @@ export default function ChineseGuidePage() {
             <div className="mt-4 rounded-2xl bg-[#1B0D15] text-white p-4 sm:p-5">
               <p className="text-sm font-semibold">通过 MCP 完成测试网资产准备</p>
               <p className="mt-1 text-xs text-white/70 leading-relaxed">
-                先从 Sepolia Faucet 领取测试 ETH，再让上层 Agent 通过 1Do Runtime MCP 的 Faucet 工具准备领取交易，由钱包 MCP 确认并广播。1Do Runtime MCP 不接收私钥，也不会替钱包 MCP 签名。
+                先从 Sepolia Faucet 领取测试 ETH，再让 Agent 通过 1Do Runtime MCP 的 Faucet 工具完成领取；本地 signer 自动签名，外部钱包模式由插件确认。
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <a href={LINKS.sepoliaFaucet} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white text-[#1B0D15] text-xs font-medium hover:bg-white/85 transition-colors">
